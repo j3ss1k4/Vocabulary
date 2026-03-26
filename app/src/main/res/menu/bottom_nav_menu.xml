@@ -3,9 +3,21 @@
     <item
         android:id="@+id/homeFragment"
         android:icon="@android:drawable/ic_menu_today"
-        android:title="Home" />
+        android:title="Trang Chủ" />
+    <item
+        android:id="@+id/vocabularyFragment"
+        android:icon="@android:drawable/ic_menu_sort_alphabetically"
+        android:title="Từ Vựng" />
+    <item
+        android:id="@+id/exerciseFragment"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Bài Tập" />
+    <item
+        android:id="@+id/testFragment"
+        android:icon="@android:drawable/checkbox_on_background"
+        android:title="Kiểm Tra" />
     <item
         android:id="@+id/profileFragment"
         android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="Profile" />
+        android:title="Hồ Sơ" />
 </menu>

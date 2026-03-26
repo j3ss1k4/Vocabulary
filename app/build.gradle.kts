@@ -1,16 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.google.services)
+    // alias(libs.plugins.google.services) // Commented out because google-services.json is missing
 }
 
 android {
     namespace = "com.example.vocabularyapp"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.vocabularyapp"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -56,11 +56,13 @@ dependencies {
     // MPAndroidChart
     implementation(libs.mp.android.chart)
 
-    // Firebase
+    // Firebase - Commented out until google-services.json is added
+    /*
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    */
 
     // WorkManager
     implementation(libs.work.runtime)

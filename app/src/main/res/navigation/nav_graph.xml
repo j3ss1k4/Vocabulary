@@ -8,13 +8,31 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.example.vocabularyapp.ui.home.HomeFragment"
-        android:label="Home"
+        android:label="Trang Chủ"
         tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/vocabularyFragment"
+        android:name="com.example.vocabularyapp.ui.vocabulary.VocabularyFragment"
+        android:label="Từ Vựng"
+        tools:layout="@layout/fragment_vocabulary" />
+
+    <fragment
+        android:id="@+id/exerciseFragment"
+        android:name="com.example.vocabularyapp.ui.exercise.ExerciseFragment"
+        android:label="Bài Tập"
+        tools:layout="@layout/fragment_exercise" />
+
+    <fragment
+        android:id="@+id/testFragment"
+        android:name="com.example.vocabularyapp.ui.test.TestFragment"
+        android:label="Kiểm Tra"
+        tools:layout="@layout/fragment_test" />
 
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.vocabularyapp.ui.profile.ProfileFragment"
-        android:label="Profile"
+        android:label="Hồ Sơ"
         tools:layout="@layout/fragment_profile" />
 
 </navigation>
