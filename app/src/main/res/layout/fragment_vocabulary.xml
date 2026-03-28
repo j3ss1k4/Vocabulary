@@ -42,13 +42,15 @@
             android:background="#F5F5F5"
             android:visibility="gone">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cvFlashcard"
                 android:layout_width="300dp"
                 android:layout_height="400dp"
                 android:layout_marginTop="32dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="12dp"
+                app:strokeWidth="0dp"
+                app:strokeColor="@android:color/transparent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -110,7 +112,7 @@
                             android:fontStyle="italic" />
                     </LinearLayout>
                 </FrameLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:id="@+id/layoutStudyControls"

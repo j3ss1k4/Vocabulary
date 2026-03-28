@@ -5,8 +5,10 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -21,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.vocabularyapp.base.BaseFragment;
 import com.example.vocabularyapp.data.local.entity.Word;
 import com.example.vocabularyapp.databinding.FragmentVocabularyBinding;
+import com.example.vocabularyapp.databinding.DialogAddWordBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +41,9 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
     private int understandCount = 0;
     private int notUnderstandCount = 0;
     private int skippedCount = 0;
+
+    private float initialX;
+    private static final int SWIPE_THRESHOLD = 300;
 
     @Override
     protected FragmentVocabularyBinding inflateViewBinding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -76,7 +82,6 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
                     .show();
         });
 
-        // Xử lý Sửa chủ đề
         categoryAdapter.setOnCategoryEditListener(categoryName -> {
             Intent intent = new Intent(requireContext(), AddFlashcardActivity.class);
             intent.putExtra("category_name", categoryName);
@@ -98,7 +103,7 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
 
     @Override
     protected void initView() {
-        binding.cvFlashcard.setOnClickListener(v -> flipCard());
+        setupSwipeFeature();
 
         binding.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -134,18 +139,8 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
             shouldResetIndex = true;
         });
 
-        binding.btnNo.setOnClickListener(v -> {
-            notUnderstandCount++;
-            updateCountersUI();
-            if (currentWords != null) weakWords.add(currentWords.get(currentIndex));
-            submitReview(SpacedRepetitionHelper.Quality.AGAIN);
-        });
-
-        binding.btnYes.setOnClickListener(v -> {
-            understandCount++;
-            updateCountersUI();
-            submitReview(SpacedRepetitionHelper.Quality.EASY);
-        });
+        binding.btnNo.setOnClickListener(v -> handleActionNo());
+        binding.btnYes.setOnClickListener(v -> handleActionYes());
 
         binding.btnPrevious.setOnClickListener(v -> {
             if (currentIndex > 0) {
@@ -178,8 +173,8 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
             }
             List<Word> retry = new ArrayList<>(weakWords);
             resetSessionData();
-            updateCountersUI();
             currentWords = retry;
+            updateCountersUI();
             startNewStudySession();
         });
 
@@ -192,6 +187,63 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
         binding.fabAddWord.setOnClickListener(v -> {
             Intent intent = new Intent(requireContext(), AddFlashcardActivity.class);
             startActivity(intent);
+        });
+    }
+
+    private void handleActionNo() {
+        notUnderstandCount++;
+        updateCountersUI();
+        if (currentWords != null && currentIndex < currentWords.size()) {
+            weakWords.add(currentWords.get(currentIndex));
+            submitReview(SpacedRepetitionHelper.Quality.AGAIN);
+        }
+    }
+
+    private void handleActionYes() {
+        understandCount++;
+        updateCountersUI();
+        submitReview(SpacedRepetitionHelper.Quality.EASY);
+    }
+
+    private void setupSwipeFeature() {
+        binding.cvFlashcard.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    initialX = event.getX();
+                    return true;
+                case MotionEvent.ACTION_MOVE:
+                    float deltaX = event.getX() - initialX;
+                    v.setTranslationX(deltaX);
+                    v.setRotation(deltaX / 20);
+                    
+                    // Hiển thị viền màu khi vuốt
+                    if (deltaX > 50) { // Vuốt sang phải -> Chưa thuộc (Đỏ)
+                        binding.cvFlashcard.setStrokeWidth(8);
+                        binding.cvFlashcard.setStrokeColor(Color.parseColor("#F44336"));
+                    } else if (deltaX < -50) { // Vuốt sang trái -> Đã thuộc (Xanh)
+                        binding.cvFlashcard.setStrokeWidth(8);
+                        binding.cvFlashcard.setStrokeColor(Color.parseColor("#4CAF50"));
+                    } else {
+                        binding.cvFlashcard.setStrokeWidth(0);
+                    }
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    float finalDeltaX = event.getX() - initialX;
+                    if (Math.abs(finalDeltaX) > SWIPE_THRESHOLD) {
+                        if (finalDeltaX < 0) {
+                            handleActionYes(); // Vuốt TRÁI = Đã thuộc
+                        } else {
+                            handleActionNo();  // Vuốt PHẢI = Chưa thuộc
+                        }
+                    } else if (Math.abs(finalDeltaX) < 10) {
+                        flipCard();
+                    }
+                    // Reset thẻ và viền
+                    v.animate().translationX(0).rotation(0).setDuration(200).start();
+                    binding.cvFlashcard.setStrokeWidth(0);
+                    return true;
+            }
+            return false;
         });
     }
 
@@ -229,6 +281,7 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
         binding.layoutFront.setVisibility(View.VISIBLE);
         binding.layoutBack.setVisibility(View.GONE);
         binding.layoutStudyControls.setVisibility(View.VISIBLE);
+        binding.cvFlashcard.setStrokeWidth(0); // Reset viền khi hiện từ mới
         isFrontVisible = true;
     }
 
