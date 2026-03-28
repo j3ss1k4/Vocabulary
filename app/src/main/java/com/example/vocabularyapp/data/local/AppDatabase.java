@@ -9,7 +9,10 @@ import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.example.vocabularyapp.data.local.dao.LessonDao;
+import com.example.vocabularyapp.data.local.dao.PostDao;
 import com.example.vocabularyapp.data.local.dao.ProgressDao;
+import com.example.vocabularyapp.data.local.dao.QuestionDao;
+import com.example.vocabularyapp.data.local.dao.ScoreDao;
 import com.example.vocabularyapp.data.local.dao.TestDao;
 import com.example.vocabularyapp.data.local.dao.UserDao;
 import com.example.vocabularyapp.data.local.dao.WordDao;
@@ -24,7 +27,7 @@ import com.example.vocabularyapp.data.local.entity.Word;
 
 import java.util.concurrent.Executors;
 
-@Database(entities = {User.class, Word.class, Lesson.class, Progress.class, Post.class, Test.class, Question.class, Score.class}, version = 4)
+@Database(entities = {User.class, Word.class, Lesson.class, Progress.class, Post.class, Test.class, Question.class, Score.class}, version = 7)
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
 
@@ -33,6 +36,9 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract LessonDao lessonDao();
     public abstract ProgressDao progressDao();
     public abstract TestDao testDao();
+    public abstract QuestionDao questionDao();
+    public abstract ScoreDao scoreDao();
+    public abstract PostDao postDao();
 
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
@@ -45,15 +51,16 @@ public abstract class AppDatabase extends RoomDatabase {
                                 @Override
                                 public void onCreate(@NonNull SupportSQLiteDatabase db) {
                                     super.onCreate(db);
-                                    // Chèn trực tiếp bằng SQL để đảm bảo dữ liệu có ngay khi tạo DB
+                                    // Chèn dữ liệu mẫu cho User để đăng nhập
                                     db.execSQL("INSERT INTO users (username, email, password, streak, rank) " +
                                             "VALUES ('user', 'user@example.com', '123', 0, 'Người mới bắt đầu')");
+                                    
+                                    // Đã xóa dữ liệu mẫu Words (Học tập, Giao tiếp) theo yêu cầu
                                 }
 
                                 @Override
                                 public void onOpen(@NonNull SupportSQLiteDatabase db) {
                                     super.onOpen(db);
-                                    // Kiểm tra lại lần nữa trong onOpen cho chắc chắn (đề phòng migration)
                                     Executors.newSingleThreadExecutor().execute(() -> {
                                         UserDao dao = getInstance(context).userDao();
                                         if (dao.getUserByEmail("user@example.com") == null) {
