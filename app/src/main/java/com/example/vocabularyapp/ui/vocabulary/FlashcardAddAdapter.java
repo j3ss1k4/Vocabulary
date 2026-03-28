@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.vocabularyapp.data.local.entity.Word;
 import com.example.vocabularyapp.databinding.ItemAddFlashcardBinding;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.List;
 public class FlashcardAddAdapter extends RecyclerView.Adapter<FlashcardAddAdapter.ViewHolder> {
 
     public static class FlashcardInput {
+        public int id = 0; // 0 nghĩa là từ mới
         public String term = "";
         public String definition = "";
     }
@@ -28,13 +30,27 @@ public class FlashcardAddAdapter extends RecyclerView.Adapter<FlashcardAddAdapte
     }
 
     public FlashcardAddAdapter() {
-        // Bắt đầu với 1 thẻ trống
+        // Mặc định tạo 1 thẻ trống
         inputs.add(new FlashcardInput());
     }
 
     public void setOnCountChangeListener(OnCountChangeListener listener) {
         this.countChangeListener = listener;
         if (listener != null) listener.onCountChange(inputs.size());
+    }
+
+    public void setInitialWords(List<Word> words) {
+        inputs.clear();
+        for (Word word : words) {
+            FlashcardInput input = new FlashcardInput();
+            input.id = word.id;
+            input.term = word.term;
+            input.definition = word.definition;
+            inputs.add(input);
+        }
+        if (inputs.isEmpty()) inputs.add(new FlashcardInput());
+        notifyDataSetChanged();
+        if (countChangeListener != null) countChangeListener.onCountChange(inputs.size());
     }
 
     public void addNewCard() {
@@ -59,34 +75,38 @@ public class FlashcardAddAdapter extends RecyclerView.Adapter<FlashcardAddAdapte
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         FlashcardInput input = inputs.get(position);
         
-        // Tránh lỗi trigger listener khi bind lại
         holder.binding.etTerm.setText(input.term);
         holder.binding.etDefinition.setText(input.definition);
 
-        holder.binding.etTerm.addTextChangedListener(new TextWatcher() {
+        // Sử dụng một phương pháp an toàn hơn để lắng nghe thay đổi
+        if (holder.termWatcher != null) holder.binding.etTerm.removeTextChangedListener(holder.termWatcher);
+        if (holder.defWatcher != null) holder.binding.etDefinition.removeTextChangedListener(holder.defWatcher);
+
+        holder.termWatcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 input.term = s.toString();
             }
             @Override public void afterTextChanged(Editable s) {}
-        });
+        };
 
-        holder.binding.etDefinition.addTextChangedListener(new TextWatcher() {
+        holder.defWatcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 input.definition = s.toString();
             }
             @Override public void afterTextChanged(Editable s) {}
-        });
+        };
+
+        holder.binding.etTerm.addTextChangedListener(holder.termWatcher);
+        holder.binding.etDefinition.addTextChangedListener(holder.defWatcher);
 
         holder.binding.btnRemove.setOnClickListener(v -> {
-            if (inputs.size() > 1) {
-                int adapterPos = holder.getAdapterPosition();
-                if (adapterPos != RecyclerView.NO_POSITION) {
-                    inputs.remove(adapterPos);
-                    notifyItemRemoved(adapterPos);
-                    if (countChangeListener != null) countChangeListener.onCountChange(inputs.size());
-                }
+            int adapterPos = holder.getAdapterPosition();
+            if (adapterPos != RecyclerView.NO_POSITION) {
+                inputs.remove(adapterPos);
+                notifyItemRemoved(adapterPos);
+                if (countChangeListener != null) countChangeListener.onCountChange(inputs.size());
             }
         });
     }
@@ -98,6 +118,8 @@ public class FlashcardAddAdapter extends RecyclerView.Adapter<FlashcardAddAdapte
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         ItemAddFlashcardBinding binding;
+        TextWatcher termWatcher;
+        TextWatcher defWatcher;
         ViewHolder(ItemAddFlashcardBinding binding) {
             super(binding.getRoot());
             this.binding = binding;

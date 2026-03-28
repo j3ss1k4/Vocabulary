@@ -4,7 +4,6 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.vocabularyapp.data.local.model.CategoryInfo;
@@ -17,6 +16,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
     private List<CategoryInfo> categories = new ArrayList<>();
     private OnCategoryClickListener listener;
     private OnCategoryLongClickListener longClickListener;
+    private OnCategoryEditListener editListener;
 
     public interface OnCategoryClickListener {
         void onCategoryClick(String categoryName);
@@ -26,12 +26,20 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         void onCategoryLongClick(String categoryName);
     }
 
+    public interface OnCategoryEditListener {
+        void onCategoryEdit(String categoryName);
+    }
+
     public void setOnCategoryClickListener(OnCategoryClickListener listener) {
         this.listener = listener;
     }
 
     public void setOnCategoryLongClickListener(OnCategoryLongClickListener longClickListener) {
         this.longClickListener = longClickListener;
+    }
+
+    public void setOnCategoryEditListener(OnCategoryEditListener listener) {
+        this.editListener = listener;
     }
 
     public void setCategories(List<CategoryInfo> categories) {
@@ -62,6 +70,12 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
                 longClickListener.onCategoryLongClick(category.category);
             }
             return true;
+        });
+
+        holder.binding.btnEditCategory.setOnClickListener(v -> {
+            if (editListener != null) {
+                editListener.onCategoryEdit(category.category);
+            }
         });
     }
 

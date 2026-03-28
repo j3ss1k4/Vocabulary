@@ -75,6 +75,13 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
                     .setNegativeButton("Hủy", null)
                     .show();
         });
+
+        // Xử lý Sửa chủ đề
+        categoryAdapter.setOnCategoryEditListener(categoryName -> {
+            Intent intent = new Intent(requireContext(), AddFlashcardActivity.class);
+            intent.putExtra("category_name", categoryName);
+            startActivity(intent);
+        });
     }
 
     private void resetSessionData() {
@@ -182,7 +189,6 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
             viewModel.setSelectedCategory(null);
         });
 
-        // MỞ ACTIVITY MỚI THAY VÌ HIỆN DIALOG
         binding.fabAddWord.setOnClickListener(v -> {
             Intent intent = new Intent(requireContext(), AddFlashcardActivity.class);
             startActivity(intent);
