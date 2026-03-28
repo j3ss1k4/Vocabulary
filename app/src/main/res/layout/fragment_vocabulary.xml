@@ -26,7 +26,6 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Danh sách chủ đề (Mặc định hiện lên) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvCategories"
             android:layout_width="match_parent"
@@ -36,7 +35,6 @@
             android:paddingBottom="80dp"
             tools:listitem="@layout/item_category" />
 
-        <!-- Flashcard View (Chỉ hiện khi chọn chủ đề hoặc tìm kiếm) -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutFlashcard"
             android:layout_width="match_parent"
@@ -175,6 +173,11 @@
                 app:tint="#757575" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- TÍCH HỢP BÁO CÁO Ở ĐÂY -->
+        <include
+            android:id="@+id/includeReport"
+            layout="@layout/layout_study_report" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

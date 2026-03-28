@@ -32,8 +32,14 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
     private CategoryAdapter categoryAdapter;
     private boolean isFrontVisible = true;
     private List<Word> currentWords;
+    private List<Word> sessionWords;
+    private List<Word> weakWords = new ArrayList<>();
     private int currentIndex = 0;
-    private boolean shouldResetIndex = true; // Flag để kiểm soát việc nhảy về từ đầu
+    private boolean shouldResetIndex = true;
+
+    private int understandCount = 0;
+    private int notUnderstandCount = 0;
+    private int skippedCount = 0;
 
     @Override
     protected FragmentVocabularyBinding inflateViewBinding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -54,22 +60,29 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
         binding.rvCategories.setAdapter(categoryAdapter);
 
         categoryAdapter.setOnCategoryClickListener(categoryName -> {
-            shouldResetIndex = true; // Reset khi chọn chủ đề mới
+            resetSessionData();
+            shouldResetIndex = true;
             viewModel.setSelectedCategory(categoryName);
             binding.layoutFlashcard.setVisibility(View.VISIBLE);
             binding.rvCategories.setVisibility(View.GONE);
+            binding.includeReport.layoutReport.setVisibility(View.GONE);
         });
 
         categoryAdapter.setOnCategoryLongClickListener(categoryName -> {
             new AlertDialog.Builder(requireContext())
                     .setTitle("Xóa chủ đề")
                     .setMessage("Bạn có chắc chắn muốn xóa chủ đề '" + categoryName + "'?")
-                    .setPositiveButton("Xóa", (dialog, which) -> {
-                        viewModel.deleteCategory(categoryName);
-                    })
+                    .setPositiveButton("Xóa", (dialog, which) -> viewModel.deleteCategory(categoryName))
                     .setNegativeButton("Hủy", null)
                     .show();
         });
+    }
+
+    private void resetSessionData() {
+        understandCount = 0;
+        notUnderstandCount = 0;
+        skippedCount = 0;
+        weakWords.clear();
     }
 
     @Override
@@ -93,6 +106,7 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
                 if (newText.isEmpty()) {
                     binding.layoutFlashcard.setVisibility(View.GONE);
                     binding.rvCategories.setVisibility(View.VISIBLE);
+                    binding.includeReport.layoutReport.setVisibility(View.GONE);
                 } else {
                     shouldResetIndex = true;
                     viewModel.setSearchQuery(newText);
@@ -109,34 +123,73 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
             shouldResetIndex = true;
         });
 
-        binding.btnAgain.setOnClickListener(v -> submitReview(SpacedRepetitionHelper.Quality.AGAIN));
-        binding.btnHard.setOnClickListener(v -> submitReview(SpacedRepetitionHelper.Quality.HARD));
-        binding.btnGood.setOnClickListener(v -> submitReview(SpacedRepetitionHelper.Quality.GOOD));
-        binding.btnEasy.setOnClickListener(v -> submitReview(SpacedRepetitionHelper.Quality.EASY));
+        binding.btnAgain.setOnClickListener(v -> {
+            notUnderstandCount++;
+            if (currentWords != null) weakWords.add(currentWords.get(currentIndex));
+            submitReview(SpacedRepetitionHelper.Quality.AGAIN);
+        });
+        binding.btnHard.setOnClickListener(v -> {
+            skippedCount++;
+            if (currentWords != null) weakWords.add(currentWords.get(currentIndex));
+            submitReview(SpacedRepetitionHelper.Quality.HARD);
+        });
+        binding.btnGood.setOnClickListener(v -> {
+            understandCount++;
+            submitReview(SpacedRepetitionHelper.Quality.GOOD);
+        });
+        binding.btnEasy.setOnClickListener(v -> {
+            understandCount++;
+            submitReview(SpacedRepetitionHelper.Quality.EASY);
+        });
+
+        binding.includeReport.btnRestartAll.setOnClickListener(v -> {
+            resetSessionData();
+            currentWords = new ArrayList<>(sessionWords);
+            startNewStudySession();
+        });
+
+        binding.includeReport.btnRestartWeakOnly.setOnClickListener(v -> {
+            if (weakWords.isEmpty()) {
+                Toast.makeText(requireContext(), "Tuyệt vời! Bạn không có từ nào chưa thuộc.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            List<Word> wordsToRetry = new ArrayList<>(weakWords);
+            resetSessionData();
+            currentWords = wordsToRetry;
+            startNewStudySession();
+        });
+
+        binding.includeReport.btnBackToMenu.setOnClickListener(v -> {
+            binding.includeReport.layoutReport.setVisibility(View.GONE);
+            binding.rvCategories.setVisibility(View.VISIBLE);
+            viewModel.setSelectedCategory(null);
+        });
 
         binding.fabAddWord.setOnClickListener(v -> showAddWordsDialog());
+    }
+
+    private void startNewStudySession() {
+        currentIndex = 0;
+        if (currentWords != null && !currentWords.isEmpty()) {
+            displayWord(currentWords.get(currentIndex));
+            binding.layoutFlashcard.setVisibility(View.VISIBLE);
+            binding.includeReport.layoutReport.setVisibility(View.GONE);
+        }
     }
 
     private void showAddWordsDialog() {
         DialogAddWordBinding dialogBinding = DialogAddWordBinding.inflate(getLayoutInflater());
         List<Word> pendingWords = new ArrayList<>();
 
-        viewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
-            if (categories != null) {
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                        android.R.layout.simple_dropdown_item_1line, categories);
-                dialogBinding.actvCategory.setAdapter(adapter);
-            }
-        });
-
+        // Sử dụng ô nhập liệu mới trong fragment (không còn AutoComplete cũ)
         dialogBinding.btnAddToList.setOnClickListener(v -> {
+            String category = dialogBinding.etCategory.getText().toString().trim();
             String term = dialogBinding.etTerm.getText().toString().trim();
             String definition = dialogBinding.etDefinition.getText().toString().trim();
-            String category = dialogBinding.actvCategory.getText().toString().trim();
             String example = dialogBinding.etExample.getText().toString().trim();
 
-            if (term.isEmpty() || definition.isEmpty() || category.isEmpty()) {
-                Toast.makeText(requireContext(), "Nhập đủ thông tin", Toast.LENGTH_SHORT).show();
+            if (category.isEmpty() || term.isEmpty() || definition.isEmpty()) {
+                Toast.makeText(requireContext(), "Vui lòng nhập Chủ đề, Thuật ngữ và Định nghĩa", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -150,7 +203,7 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
             word.nextReviewTime = System.currentTimeMillis();
 
             pendingWords.add(word);
-            dialogBinding.tvAddedWordsCount.setText("Danh sách chờ: " + pendingWords.size() + " từ");
+            dialogBinding.tvAddedWordsCount.setText("Đã chuẩn bị: " + pendingWords.size() + " từ");
             String preview = pendingWords.stream().map(w -> w.term).collect(Collectors.joining(", "));
             dialogBinding.tvAddedWordsPreview.setText(preview);
 
@@ -161,9 +214,9 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
         });
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Thêm Flashcard")
+                .setTitle("Tạo học phần")
                 .setView(dialogBinding.getRoot())
-                .setPositiveButton("Lưu tất cả", (dialog, which) -> {
+                .setPositiveButton("Lưu", (dialog, which) -> {
                     if (!pendingWords.isEmpty()) {
                         viewModel.insertWords(pendingWords);
                     }
@@ -178,16 +231,14 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
         });
 
         viewModel.getDisplayWords().observe(getViewLifecycleOwner(), words -> {
-            this.currentWords = words;
-            if (words != null && !words.isEmpty()) {
-                if (shouldResetIndex) {
-                    currentIndex = 0;
+            if (shouldResetIndex) {
+                this.sessionWords = words;
+                this.currentWords = words;
+                currentIndex = 0;
+                if (words != null && !words.isEmpty()) {
                     displayWord(words.get(currentIndex));
-                    shouldResetIndex = false;
                 }
-            } else {
-                binding.tvWordFront.setText("Hết từ vựng!");
-                binding.layoutDifficulty.setVisibility(View.INVISIBLE);
+                shouldResetIndex = false;
             }
         });
     }
@@ -211,10 +262,27 @@ public class VocabularyFragment extends BaseFragment<FragmentVocabularyBinding> 
             if (currentIndex < currentWords.size()) {
                 displayWord(currentWords.get(currentIndex));
             } else {
-                binding.tvWordFront.setText("Bạn đã hoàn thành bộ này!");
-                binding.layoutDifficulty.setVisibility(View.INVISIBLE);
+                showReport();
             }
         }
+    }
+
+    private void showReport() {
+        binding.layoutFlashcard.setVisibility(View.GONE);
+        binding.includeReport.layoutReport.setVisibility(View.VISIBLE);
+
+        int total = understandCount + notUnderstandCount + skippedCount;
+        if (total == 0) total = 1;
+
+        binding.includeReport.tvUnderstandCount.setText(String.valueOf(understandCount));
+        binding.includeReport.tvNotUnderstandCount.setText(String.valueOf(notUnderstandCount));
+        binding.includeReport.tvSkippedCount.setText(String.valueOf(skippedCount));
+        
+        binding.includeReport.tvCorrectRatio.setText(understandCount + "/" + total);
+        int percent = (understandCount * 100) / total;
+        binding.includeReport.tvPercentage.setText(percent + "%");
+        binding.includeReport.pbReportCircle.setMax(100);
+        binding.includeReport.pbReportCircle.setProgress(percent);
     }
 
     private void flipCard() {

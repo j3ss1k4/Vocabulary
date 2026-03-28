@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="#F6F7FB">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -9,97 +11,157 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <TextView
+        <!-- Phần Tiêu đề/Chủ đề -->
+        <EditText
+            android:id="@+id/etCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Tạo bộ Flashcard"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Chủ đề (VD: Hoa quả)">
-            <AutoCompleteTextView
-                android:id="@+id/actvCategory"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapSentences"
-                android:completionThreshold="1" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:background="@null"
+            android:hint="Chủ đề, chương, đơn vị"
+            android:inputType="textCapSentences"
+            android:paddingVertical="12dp"
+            android:textSize="18sp" />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginVertical="16dp"
-            android:background="#EEEEEE" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Từ vựng (Tiếng Anh)">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etTerm"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textVisiblePassword" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Nghĩa (Tiếng Việt)">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etDefinition"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapSentences" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Ví dụ (Không bắt buộc)">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etExample"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapSentences" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <Button
-            android:id="@+id/btnAddToList"
-            style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="8dp"
-            android:text="Thêm từ này (+)"
-            android:icon="@android:drawable/ic_input_add" />
+            android:layout_height="2dp"
+            android:background="#303F9F" />
 
         <TextView
-            android:id="@+id/tvAddedWordsCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="TIÊU ĐỀ"
+            android:textColor="#303F9F"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="32dp" />
+
+        <!-- Card nhập liệu cho Thuật ngữ và Định nghĩa -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Thuật ngữ -->
+                <EditText
+                    android:id="@+id/etTerm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:hint="Thuật ngữ (Tiếng Anh)"
+                    android:inputType="textNoSuggestions"
+                    android:paddingVertical="12dp"
+                    android:textSize="16sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1.5dp"
+                    android:background="#424242" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="THUẬT NGỮ"
+                    android:textColor="#424242"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="24dp" />
+
+                <!-- Định nghĩa -->
+                <EditText
+                    android:id="@+id/etDefinition"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:hint="Định nghĩa (Tiếng Việt)"
+                    android:inputType="textCapSentences"
+                    android:paddingVertical="12dp"
+                    android:textSize="16sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1.5dp"
+                    android:background="#424242" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="ĐỊNH NGHĨA"
+                    android:textColor="#424242"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="16dp" />
+
+                <!-- Ví dụ -->
+                <EditText
+                    android:id="@+id/etExample"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:hint="Ví dụ (Không bắt buộc)"
+                    android:inputType="textCapSentences"
+                    android:paddingVertical="8dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Nút thêm và trạng thái -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Danh sách chờ: 0 từ"
-            android:textStyle="bold"
-            android:textColor="#6200EE" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvAddedWordsCount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Đã chuẩn bị: 0 từ"
+                android:textColor="#303F9F"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddToList"
+                style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="THÊM THẺ (+)"
+                android:textColor="#303F9F"
+                app:icon="@android:drawable/ic_input_add"
+                app:iconTint="#303F9F" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvAddedWordsPreview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textColor="#757575"
-            android:layout_marginTop="4dp" />
+            android:textSize="12sp" />
 
     </LinearLayout>
 </ScrollView>
