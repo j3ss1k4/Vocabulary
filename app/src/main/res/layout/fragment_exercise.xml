@@ -1,10 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
     <TextView
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Màn hình Bài Tập" />
-</FrameLayout>
+        android:text="Chọn bài tập"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTests"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Container for questions -->
+    <LinearLayout
+        android:id="@+id/layoutQuestionContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/tvQuestionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Trắc nghiệm -->
+        <LinearLayout
+            android:id="@+id/layoutMultipleChoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <Button android:id="@+id/btnOptionA" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAllCaps="false" />
+            <Button android:id="@+id/btnOptionB" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAllCaps="false" />
+            <Button android:id="@+id/btnOptionC" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAllCaps="false" />
+            <Button android:id="@+id/btnOptionD" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAllCaps="false" />
+        </LinearLayout>
+
+        <!-- Điền từ -->
+        <LinearLayout
+            android:id="@+id/layoutFillBlank"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <EditText
+                android:id="@+id/etFillAnswer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nhập đáp án..." />
+            <Button
+                android:id="@+id/btnCheckFill"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Kiểm tra"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
+
+        <!-- Feedback & Explanation Section -->
+        <LinearLayout
+            android:id="@+id/layoutFeedback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvFeedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnShowExplanation"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Xem giải thích"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvExplanation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnNextQuestion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tiếp theo"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <!-- Kết quả màn hình (hiện sau khi làm xong 10 câu) -->
+    <LinearLayout
+        android:id="@+id/layoutResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kết quả bài tập"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#0D8ADB"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:id="@+id/tvScore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đúng: 0/10"
+            android:textSize="22sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvResultFeedback"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Làm tốt lắm!"
+            android:textSize="18sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="32dp"/>
+
+        <Button
+            android:id="@+id/btnFinish"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Kết thúc"
+            android:backgroundTint="#0D8ADB"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+</LinearLayout>
