@@ -26,6 +26,14 @@ public interface QuestionDao {
     @Query("SELECT * FROM questions WHERE testId = :testId")
     LiveData<List<Question>> getQuestionsByTestId(int testId);
 
+    /**
+     * Lấy ngẫu nhiên các câu hỏi duy nhất cho một bài test.
+     * GROUP BY questionText đảm bảo các câu hỏi có nội dung giống nhau chỉ xuất hiện 1 lần.
+     * ORDER BY RANDOM() đảm bảo mỗi lần gọi là một bộ câu hỏi khác nhau.
+     */
+    @Query("SELECT * FROM questions WHERE testId = :testId GROUP BY questionText ORDER BY RANDOM() LIMIT :limit")
+    LiveData<List<Question>> getRandomQuestionsByTestId(int testId, int limit);
+
     @Query("SELECT * FROM questions")
     LiveData<List<Question>> getAllQuestions();
 }

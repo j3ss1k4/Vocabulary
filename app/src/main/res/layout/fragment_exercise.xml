@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -9,7 +10,7 @@
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Chọn bài tập"
+        android:text="Select Exercise"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"/>
@@ -35,6 +36,32 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
+        <!-- Audio Player Section -->
+        <LinearLayout
+            android:id="@+id/layoutAudioPlayer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/btnPlayAudio"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_media_play"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="#0D8ADB" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Listen to Audio"
+                android:layout_marginStart="8dp"
+                android:textColor="#0D8ADB" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tvQuestionText"
             android:layout_width="match_parent"
@@ -43,7 +70,7 @@
             android:textStyle="bold"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Trắc nghiệm -->
+        <!-- Multiple Choice -->
         <LinearLayout
             android:id="@+id/layoutMultipleChoice"
             android:layout_width="match_parent"
@@ -56,7 +83,7 @@
             <Button android:id="@+id/btnOptionD" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAllCaps="false" />
         </LinearLayout>
 
-        <!-- Điền từ -->
+        <!-- Fill Blank -->
         <LinearLayout
             android:id="@+id/layoutFillBlank"
             android:layout_width="match_parent"
@@ -67,12 +94,12 @@
                 android:id="@+id/etFillAnswer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nhập đáp án..." />
+                android:hint="Type your answer..." />
             <Button
                 android:id="@+id/btnCheckFill"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Kiểm tra"
+                android:text="Check"
                 android:layout_marginTop="8dp"/>
         </LinearLayout>
 
@@ -95,11 +122,12 @@
 
             <Button
                 android:id="@+id/btnShowExplanation"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Xem giải thích"
-                android:visibility="gone" />
+                android:text="Show Explanation"
+                android:visibility="gone"
+                android:textAllCaps="false"
+                style="@style/Widget.MaterialComponents.Button.TextButton"/>
 
             <TextView
                 android:id="@+id/tvExplanation"
@@ -115,12 +143,12 @@
             android:id="@+id/btnNextQuestion"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Tiếp theo"
+            android:text="Next"
             android:layout_marginTop="16dp"
             android:visibility="gone"/>
     </LinearLayout>
 
-    <!-- Kết quả màn hình (hiện sau khi làm xong 10 câu) -->
+    <!-- Result Screen -->
     <LinearLayout
         android:id="@+id/layoutResult"
         android:layout_width="match_parent"
@@ -132,7 +160,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Kết quả bài tập"
+            android:text="Exercise Result"
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="#0D8ADB"
@@ -142,7 +170,7 @@
             android:id="@+id/tvScore"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Đúng: 0/10"
+            android:text="Score: 0/10"
             android:textSize="22sp"
             android:layout_marginBottom="8dp"/>
 
@@ -150,7 +178,7 @@
             android:id="@+id/tvResultFeedback"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Làm tốt lắm!"
+            android:text="Well done!"
             android:textSize="18sp"
             android:textColor="#666666"
             android:layout_marginBottom="32dp"/>
@@ -159,7 +187,7 @@
             android:id="@+id/btnFinish"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:text="Kết thúc"
+            android:text="Finish"
             android:backgroundTint="#0D8ADB"
             android:textColor="@android:color/white"/>
     </LinearLayout>

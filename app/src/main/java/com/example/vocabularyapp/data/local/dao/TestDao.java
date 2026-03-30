@@ -27,6 +27,9 @@ public interface TestDao {
     @Query("SELECT * FROM tests")
     LiveData<List<Test>> getAllTests();
 
+    @Query("SELECT * FROM tests")
+    List<Test> getAllTestsSync();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertQuestion(Question question);
 
