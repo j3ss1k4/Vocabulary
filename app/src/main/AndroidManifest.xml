@@ -44,6 +44,14 @@
             android:name=".ui.vocabulary.AddFlashcardActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.test.TestSessionActivity"
+            android:exported="false"
+            android:label="Làm bài thi" />
+        <activity
+            android:name=".ui.test.TestResultActivity"
+            android:exported="false"
+            android:label="Kết quả" />
     </application>
 
 </manifest>
