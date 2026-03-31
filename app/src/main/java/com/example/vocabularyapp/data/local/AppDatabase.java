@@ -2,35 +2,22 @@ package com.example.vocabularyapp.data.local;
 
 import android.content.Context;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import com.example.vocabularyapp.data.local.dao.LessonDao;
-import com.example.vocabularyapp.data.local.dao.PostDao;
-import com.example.vocabularyapp.data.local.dao.ProgressDao;
-import com.example.vocabularyapp.data.local.dao.QuestionDao;
-import com.example.vocabularyapp.data.local.dao.ScoreDao;
-import com.example.vocabularyapp.data.local.dao.TestDao;
-import com.example.vocabularyapp.data.local.dao.UserDao;
-import com.example.vocabularyapp.data.local.dao.WordDao;
-import com.example.vocabularyapp.data.local.entity.Lesson;
-import com.example.vocabularyapp.data.local.entity.Post;
-import com.example.vocabularyapp.data.local.entity.Progress;
-import com.example.vocabularyapp.data.local.entity.Question;
-import com.example.vocabularyapp.data.local.entity.Score;
-import com.example.vocabularyapp.data.local.entity.Test;
-import com.example.vocabularyapp.data.local.entity.User;
-import com.example.vocabularyapp.data.local.entity.Word;
+// IMPORT CHUẨN: Dùng dấu * để import tất cả class trong thư mục của bạn
+import com.example.vocabularyapp.data.local.dao.*;
+import com.example.vocabularyapp.data.local.entity.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executors; // Thêm dòng này để sửa lỗi Executors
 
+// Khai báo Entity đúng class trong package của bạn
 @Database(entities = {User.class, Word.class, Lesson.class, Progress.class, Post.class, Test.class, Question.class, Score.class}, version = 80)
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
@@ -61,21 +48,9 @@ public abstract class AppDatabase extends RoomDatabase {
                                 @Override
                                 public void onOpen(@NonNull SupportSQLiteDatabase db) {
                                     super.onOpen(db);
-                                    // Kiểm tra và nạp lại nếu dữ liệu bị mất
-                                    Executors.newSingleThreadExecutor().execute(() -> {
-                                        try {
-                                            android.database.Cursor cursor = db.query("SELECT COUNT(*) FROM tests");
-                                            cursor.moveToFirst();
-                                            int count = cursor.getInt(0);
-                                            cursor.close();
-                                            if (count == 0) {
-                                                Log.d("AppDatabase", "Database empty on open, seeding data...");
-                                                seedData(db);
-                                            }
-                                        } catch (Exception e) {
-                                            Log.e("AppDatabase", "Error checking data: " + e.getMessage());
-                                        }
-                                    });
+                                    // Kiểm tra và nạp lại nếu dữ liệu bị mất (chạy đồng bộ vì onOpen đã ở bg thread)
+                                    Log.d("AppDatabase", "Checking for new data updates...");
+                                    seedData(db);
                                 }
                             })
                             .build();
@@ -98,6 +73,8 @@ public abstract class AppDatabase extends RoomDatabase {
                 db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (200, 'Fill-in-the-Blanks', 'Verb forms and structures', 20, 100)");
                 db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (300, 'Listening Multiple Choice', 'Listen and answer', 20, 100)");
                 db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (400, 'Dictation Practice', 'Listen and type', 20, 100)");
+                db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (500, 'Pronunciation: Words', 'Speak the words correctly', 15, 100)");
+                db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (600, 'Pronunciation: Sentences', 'Speak the full sentences', 20, 100)");
 
                 // --- TEST 100: Multiple Choice ---
                 String[][] mcBase = {
@@ -384,7 +361,7 @@ public abstract class AppDatabase extends RoomDatabase {
                         {"Where is the taxi stand?", "Outside exit", "Level 2", "Parking lot", "Lobby", "You can find a taxi stand right outside the main exit.", "Ở ngoài lối ra chính."},
                         {"What is the cabin number?", "104", "205", "306", "407", "Your cabin is on the first deck, room one zero four.", "Số phòng là 104."},
                         {"How much is the fare?", "$2.50", "$1.50", "$3.00", "$5.00", "The bus fare is two dollars and fifty cents.", "Giá vé là 2.5 đô la."},
-                        {"Where is the hotel?", "By the lake", "Near airport", "Downtown", "In the forest", "Our hotel is located right by the lake.", "Khách sạn bên hồ."},
+                        {"Where is the hotel?", "Right by the lake", "Near airport", "Downtown", "In the forest", "Our hotel is located right by the lake.", "Khách sạn bên hồ."},
                         {"Is there a map?", "In the brochure", "On the wall", "At the desk", "Online", "There is a detailed map inside the travel brochure.", "Bản đồ trong tập quảng cáo."},
                         {"Which way to the station?", "Turn right", "Turn left", "Go straight", "Backwards", "Turn right at the lights to reach the station.", "Rẽ phải ở đèn giao thông."},
                         {"What is the seat number?", "12A", "14B", "10C", "15D", "Your assigned seat for this trip is twelve A.", "Số ghế là 12A."},
@@ -554,8 +531,136 @@ public abstract class AppDatabase extends RoomDatabase {
                     db.execSQL("INSERT OR IGNORE INTO questions (testId, type, questionText, optionA, optionB, optionC, optionD, correctOption, explanation, audioPath) VALUES (400, 'LISTENING_DICTATION', '" + d[0].replace("'", "''") + "', '', '', '', '', '" + d[1].replace("'", "''") + "', '" + d[3].replace("'", "''") + "', '" + d[2].replace("'", "''") + "')");
                 }
 
+                // --- TEST 500: Pronunciation - Vocabulary (Speaking) ---
+                db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (500, 'Pronunciation: Words', 'Speak the words correctly', 15, 100)");
+                String[][] speakWords = {
+                        {"Schedule", "/ˈʃedjuːl/", "Lịch trình"}, {"Management", "/ˈmænɪdʒmənt/", "Sự quản lý"}, {"Colleague", "/ˈkɒliːɡ/", "Đồng nghiệp"}, {"Signature", "/ˈsɪɡnətʃə(r)/", "Chữ ký"}, {"Appointment", "/əˈpɔɪntmənt/", "Cuộc hẹn"}, {"Representative", "/ˌreprɪˈzentətɪv/", "Người đại diện"}, {"Department", "/dɪˈpɑːtmənt/", "Phòng ban"}, {"Conference", "/ˈkɒnfərəns/", "Hội nghị"}, {"Executive", "/ɪɡˈzekjətɪv/", "Người điều hành/Cấp cao"}, {"Employee", "/ɪmˈplɔɪiː/", "Nhân viên"},
+                        {"Security", "/sɪˈkjʊərəti/", "An ninh/Bảo mật"}, {"Database", "/ˈdeɪtəbeɪs/", "Cơ sở dữ liệu"}, {"Encryption", "/ɪnˈkrɪpʃn/", "Sự mã hóa"}, {"Protocol", "/ˈprəʊtəkɒl/", "Giao thức"}, {"Network", "/ˈnetwɜːk/", "Mạng lưới"}, {"Vulnerability", "/ˌvʌlnərəˈbɪləti/", "Lỗ hổng bảo mật"}, {"Authentication", "/ɔːˌθentɪˈkeɪʃn/", "Xác thực"}, {"Firewall", "/ˈfaɪəwɔːl/", "Tường lửa"}, {"Software", "/ˈsɒftweə(r)/", "Phần mềm"}, {"Hardware", "/ˈhɑːdweə(r)/", "Phần cứng"},
+                        {"Photocopier", "/ˈfəʊtəʊkɒpiə(r)/", "Máy photocopy"}, {"Projector", "/prəˈdʒektə(r)/", "Máy chiếu"}, {"Inventory", "/ˈɪnvəntri/", "Hàng tồn kho"}, {"Document", "/ˈdɒkjumənt/", "Tài liệu"}, {"Keyboard", "/ˈkiːbɔːd/", "Bàn phím"}, {"Processor", "/ˈprəʊsesə(r)/", "Bộ vi xử lý"}, {"Monitor", "/ˈmɒnɪtə(r)/", "Màn hình"}, {"Calculator", "/ˈkælkjuleɪtə(r)/", "Máy tính bỏ túi"}, {"Cartridge", "/ˈkɑːtrɪdʒ/", "Hộp mực"}, {"Stationery", "/ˈsteɪʃənri/", "Văn phòng phẩm"},
+                        {"Accounting", "/əˈkaʊntɪŋ/", "Kế toán"}, {"Budget", "/ˈbʌdʒɪt/", "Ngân sách"}, {"Transaction", "/trænˈzækʃn/", "Giao dịch"}, {"Currency", "/ˈkʌrənsi/", "Tiền tệ"}, {"Investment", "/ɪnˈvestmənt/", "Sự đầu tư"}, {"Profit", "/ˈprɒfɪt/", "Lợi nhuận"}, {"Expense", "/ɪkˈspens/", "Chi phí"}, {"Revenue", "/ˈrevənjuː/", "Doanh thu"}, {"Bankruptcy", "/ˈbæŋkrʌptsi/", "Sự phá sản"}, {"Quarterly", "/ˈkwɔːtəli/", "Hàng quý"},
+                        {"Implement", "/ˈɪmplɪment/", "Triển khai"}, {"Communicate", "/kəˈmjuːnɪkeɪt/", "Giao tiếp"}, {"Analyze", "/ˈænəlaɪz/", "Phân tích"}, {"Determine", "/dɪˈtɜːmɪn/", "Xác định"}, {"Collaborate", "/kəˈlæbəreɪt/", "Cộng tác"}, {"Negotiate", "/nɪˈɡəʊʃieɪt/", "Đàm phán"}, {"Distribute", "/dɪˈstrɪbjuːt/", "Phân phối"}, {"Maintain", "/meɪnˈteɪn/", "Duy trì"}, {"Technical", "/ˈteknɪkl/", "Kỹ thuật"}, {"Available", "/əˈveɪləbl/", "Có sẵn"},
+                        {"Reliable", "/rɪˈlaɪəbl/", "Đáng tin cậy"}, {"Confidential", "/ˌkɒnfɪˈdenʃl/", "Bảo mật"}, {"Efficient", "/ɪˈfɪʃnt/", "Hiệu quả"}, {"Innovative", "/ˈɪnəveɪtɪv/", "Đổi mới sáng tạo"}, {"Flexible", "/ˈfleksəbl/", "Linh hoạt"}, {"Professional", "/prəˈfeʃənl/", "Chuyên nghiệp"}, {"Productive", "/prəˈdʌktɪv/", "Năng suất"}, {"Automated", "/ˈɔːtəmeɪtɪd/", "Tự động hóa"}, {"Strategic", "/strəˈtiːdʒɪk/", "Chiến lược"}, {"Substantial", "/səbˈstænʃl/", "Đáng kể"},
+                        {"Significant", "/sɪɡˈnɪfɪkənt/", "Quan trọng"}, {"Consistent", "/kənˈsɪstənt/", "Nhất quán"}, {"Appropriate", "/əˈprəʊprieɪt/", "Thích hợp"}, {"Equivalent", "/ɪˈkwɪvələnt/", "Tương đương"}, {"Preliminary", "/prɪˈlɪmɪnəri/", "Sơ bộ"}, {"Mandatory", "/ˈmændətəri/", "Bắt buộc"}, {"Temporary", "/ˈtemprəri/", "Tạm thời"}, {"Sufficient", "/səˈfɪʃnt/", "Đủ"}, {"Comprehensive", "/ˌkɒmprɪˈhensɪv/", "Toàn diện"}, {"Exceptional", "/ɪkˈsepʃənl/", "Xuất sắc"},
+                        {"Successful", "/səkˈsesfl/", "Thành công"}, {"Authorized", "/ˈɔːθəraɪzd/", "Được ủy quyền"}, {"Supervise", "/ˈsuːpəvaɪz/", "Giám sát"}, {"Organize", "/ˈɔːɡənaɪz/", "Tổ chức"}, {"Identify", "/aɪˈdentɪfaɪ/", "Nhận diện"}, {"Recommend", "/ˌrekəˈmend/", "Đề xuất"}, {"Evaluate", "/ɪˈvæljueɪt/", "Đánh giá"}, {"Participate", "/pɑːˈtɪsɪpeɪt/", "Tham gia"}, {"Accommodate", "/əˈkɒmədeɪt/", "Đáp ứng"}, {"Contribute", "/kənˈtrɪbjuːt/", "Đóng góp"},
+                        {"Demonstrate", "/ˈdemənstreɪt/", "Chứng minh"}, {"Facilitate", "/fəˈsɪlɪteɪt/", "Tạo điều kiện"}, {"Incorporate", "/ɪnˈkɔːpəreɪt/", "Kết hợp"}, {"Modify", "/ˈmɒdɪfaɪ/", "Sửa đổi"}, {"Prioritize", "/praɪˈɒrətaɪz/", "Ưu tiên"}, {"Register", "/ˈredʒɪstə(r)/", "Đăng ký"}, {"Terminate", "/ˈtɜːmɪneɪt/", "Chấm dứt"}, {"Verify", "/ˈverɪfaɪ/", "Xác minh"}, {"Purchase", "/ˈpɜːtʃəs/", "Mua hàng"}, {"Upgrade", "/ˌʌpˈɡreɪd/", "Nâng cấp"},
+                        {"Install", "/ɪnˈstɔːl/", "Cài đặt"}, {"Configure", "/kənˈfɪɡə(r)/", "Cấu hình"}, {"Troubleshoot", "/ˈtrʌblʃuːt/", "Sửa lỗi"}, {"Summarize", "/ˈsʌməraɪz/", "Tóm tắt"}, {"Candidate", "/ˈkændɪdət/", "Ứng viên"}, {"Strategy", "/ˈstrætədʒi/", "Chiến lược"}, {"Procedure", "/prəˈsiːdʒə(r)/", "Thủ tục"}, {"Equipment", "/ɪˈkwɪpmənt/", "Thiết bị"}, {"Environment", "/ɪnˈvaɪrənmənt/", "Môi trường"}, {"Performance", "/pəˈfɔːməns/", "Hiệu suất"}
+                };
+                for (String[] d : speakWords) {
+                    db.execSQL("INSERT OR IGNORE INTO questions (testId, type, questionText, optionA, optionB, optionC, optionD, correctOption, explanation, audioPath) " +
+                            "VALUES (500, 'SPEAKING_WORD', '" + d[0] + "', '', '', '', '', '" + d[0] + "', '" + d[1] + " | " + d[2] + "', '')");
+                }
+
+                // --- TEST 600: Pronunciation - Sentences (Speaking) ---
+                db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (600, 'Pronunciation: Sentences', 'Speak the full sentences', 20, 100)");
+                String[][] speakSents = {
+                        {"The meeting has been rescheduled for next Monday.", "/ðə ˈmiːtɪŋ hæz biːn ˌriːˈʃedjuːld fɔː(r) nekst ˈmʌndeɪ/", "Cuộc họp đã được dời sang thứ Hai tới."},
+                        {"Please let me know if you have any further questions.", "/pliːz let miː nəʊ ɪf juː hæv ˈeni ˈfɜːðə(r) ˈkwestʃənz/", "Vui lòng cho tôi biết nếu bạn có thêm bất kỳ câu hỏi nào."},
+                        {"We need to update our security protocol immediately.", "/wiː niːd tuː ʌpˈdeɪt ˈaʊə(r) sɪˈkjʊərəti ˈprəʊtəkɒl ɪˈmiːdiətli/", "Chúng ta cần cập nhật giao thức bảo mật ngay lập tức."},
+                        {"Could you please sign the document at the bottom?", "/kʊd juː pliːz saɪn ðə ˈdɒkjumənt æt ðə ˈbɒtəm/", "Bạn có thể vui lòng ký vào văn bản ở phía dưới không?"},
+                        {"The marketing team is working on a new strategy.", "/ðə ˈmɑːkɪtɪŋ tiːm ɪz ˈwɜːkɪŋ ɒn ə njuː ˈstrætədʒi/", "Đội ngũ marketing đang xây dựng một chiến lược mới."},
+                        {"I am looking forward to hearing from you soon.", "/aɪ æm ˈlʊkɪŋ ˈfɔːwəd tuː ˈhɪərɪŋ frəm juː suːn/", "Tôi rất mong sớm nhận được phản hồi từ bạn."},
+                        {"The office will be closed for the national holiday.", "/ðə ˈɒfɪs wɪl biː kləʊzd fɔː(r) ðə ˈnæʃnəl ˈhɒlədeɪ/", "Văn phòng sẽ đóng cửa vào ngày lễ quốc gia."},
+                        {"Our supervisor is very happy with the final results.", "/ˈaʊə(r) ˈsuːpəvaɪzə(r) ɪz ˈveri ˈhæpi wɪð ðə ˈfaɪnl rɪˈzʌlts/", "Người giám sát của chúng tôi rất hài lòng với kết quả cuối cùng."},
+                        {"You can find the files in the shared folder on the server.", "/juː kæn faɪnd ðə faɪlz ɪn ðə ʃeəd ˈfəʊldə(r) ɒn ðə ˈsɜːvə(r)/", "Bạn có thể tìm thấy các tệp tin trong thư mục chia sẻ trên máy chủ."},
+                        {"The presentation was very informative and helpful.", "/ðə ˌpreznˈteɪʃn wɒz ˈveri ɪnˈfɔːmətɪv ænd ˈhelpfl/", "Bài thuyết trình rất nhiều thông tin và hữu ích."},
+                        {"We are looking for a candidate with strong technical skills.", "/wiː ɑː(r) ˈlʊkɪŋ fɔː(r) ə ˈkændɪdət wɪð strɒŋ ˈteknɪkl skɪlz/", "Chúng tôi đang tìm kiếm một ứng viên có kỹ năng kỹ thuật tốt."},
+                        {"The new software update will be available tomorrow morning.", "/ðə njuː ˈsɒftweə(r) ʌpˈdeɪt wɪl biː əˈveɪləbl təˈmɒrəʊ ˈmɔːnɪŋ/", "Bản cập nhật phần mềm mới sẽ có sẵn vào sáng mai."},
+                        {"Please turn off the lights before leaving the office.", "/pliːz tɜːn ɒf ðə laɪts bɪˈfɔː(r) ˈliːvɪŋ ðə ˈɒfɪs/", "Vui lòng tắt đèn trước khi rời khỏi văn phòng."},
+                        {"He has been working at this company for over ten years.", "/hiː hæz biːn ˈwɜːkɪŋ æt ðɪs ˈkʌmpəni fɔː(r) ˈəʊvə(r) ten jɪəz/", "Anh ấy đã làm việc tại công ty này hơn mười năm rồi."},
+                        {"The project was completed ahead of schedule.", "/ðə ˈprɒdʒekt wɒz kəmˈpliːtɪd əˈhed əv ˈʃedjuːl/", "Dự án đã được hoàn thành trước thời hạn."},
+                        {"Our customer service department is available twenty-four seven.", "/ˈaʊə(r) ˈkʌstəmə(r) ˈsɜːvɪs dɪˈpɑːtmənt ɪz əˈveɪləbl ˈtwenti fɔː(r) ˈsevn/", "Bộ phận chăm sóc khách hàng của chúng tôi phục vụ 24/7."},
+                        {"We need to reduce our expenses to stay within the budget.", "/wiː niːd tuː rɪˈdjuːs ˈaʊə(r) ɪkˈspensɪz tuː steɪ wɪˈðɪn ðə ˈbʌdʒɪt/", "Chúng ta cần giảm chi phí để duy trì trong mức ngân sách."},
+                        {"Could you please send me the invoice by email?", "/kʊd juː pliːz send miː ðə ˈɪnvɔɪs baɪ ˈiːmeɪl/", "Bạn có thể gửi hóa đơn cho tôi qua email được không?"},
+                        {"The manager wants to discuss the new proposal with you.", "/ðə ˈmænɪdʒə(r) wɒnts tuː dɪˈskʌs ðə njuː prəˈpəʊzl wɪð juː/", "Quản lý muốn thảo luận về bản đề xuất mới với bạn."},
+                        {"She is responsible for organizing the annual conference.", "/ʃiː ɪz rɪˈspɒnsəbl fɔː(r) ˈɔːɡənaɪzɪŋ ðə ˈænjuəl ˈkɒnfərəns/", "Cô ấy chịu trách nhiệm tổ chức hội nghị thường niên."},
+                        {"We have received a lot of positive feedback from clients.", "/wiː hæv rɪˈsiːvd ə lɒt əv ˈpɒzətɪv ˈfiːdbæk frəm ˈklaɪənts/", "Chúng tôi đã nhận được rất nhiều phản hồi tích cực từ khách hàng."},
+                        {"The elevator is currently out of order for maintenance.", "/ðə ˈelɪveɪtə(r) ɪz ˈkʌrəntli aʊt əv ˈɔːdə(r) fɔː(r) ˈmeɪntənəns/", "Thang máy hiện đang hỏng để bảo trì."},
+                        {"Please attend the mandatory safety training tomorrow afternoon.", "/pliːz əˈtend ðə ˈmændətəri ˈseɪfti ˈtreɪnɪŋ təˈmɒrəʊ ˌɑːftəˈnuːn/", "Vui lòng tham gia buổi đào tạo an toàn bắt buộc vào chiều mai."},
+                        {"The company is planning to expand its business abroad.", "/ðə ˈkʌmpəni ɪz ˈplænɪŋ tuː ɪkˈspænd ɪts ˈbɪznəs əˈbrɔːd/", "Công ty đang có kế hoạch mở rộng kinh doanh ra nước ngoài."},
+                        {"We need to finalize the contract by the end of the week.", "/wiː niːd tuː ˈfaɪnəlaɪz ðə ˈkɒntrækt baɪ ðə end əv ðə wiːk/", "Chúng ta cần hoàn tất hợp đồng vào cuối tuần này."},
+                        {"I will send you the meeting minutes as soon as possible.", "/aɪ wɪl send juː ðə ˈmiːtɪŋ ˈmɪnɪts æz suːn æz ˈpɒsəbl/", "Tôi sẽ gửi biên bản cuộc họp cho bạn sớm nhất có thể."},
+                        {"The new office building is located in the city center.", "/ðə njuː ˈɒfɪs ˈbɪldɪŋ ɪz ləʊˈkeɪtɪd ɪn ðə ˈsɪti ˈsentə(r)/", "Tòa nhà văn phòng mới nằm ở trung tâm thành phố."},
+                        {"We are experiencing some technical difficulties with the server.", "/wiː ɑː(r) ɪkˈspɪəriənsɪŋ sʌm ˈteknɪkl ˈdɪfɪkəltiz wɪð ðə ˈsɜːvə(r)/", "Chúng tôi đang gặp một số khó khăn kỹ thuật với máy chủ."},
+                        {"Please fill out this application form and return it to us.", "/pliːz fɪl aʊt ðɪs ˌæplɪˈkeɪʃn fɔːm ænd rɪˈtɜːn ɪt tuː ʌs/", "Vui lòng điền vào đơn đăng ký này và gửi lại cho chúng tôi."},
+                        {"The salary will be discussed during the interview process.", "/ðə ˈsæləri wɪl biː dɪˈskʌst ˈdjʊərɪŋ ðə ˈɪntəvjuː ˈprəʊses/", "Mức lương sẽ được thảo luận trong quá trình phỏng vấn."},
+                        {"We have a wide range of products to choose from.", "/wiː hæv ə waɪd reɪndʒ əv ˈprɒdʌkts tuː tʃuːz frəm/", "Chúng tôi có rất nhiều sản phẩm để bạn lựa chọn."},
+                        {"The board of directors will meet next month to decide.", "/ðə bɔːd əv dəˈrektəz wɪl miːt nekst mʌnθ tuː dɪˈsaɪd/", "Hội đồng quản trị sẽ họp vào tháng tới để quyết định."},
+                        {"Please ensure that all documents are stored securely.", "/pliːz ɪnˈʃʊə(r) ðæt ɔːl ˈdɒkjumənts ɑː(r) stɔːd sɪˈkjʊəli/", "Vui lòng đảm bảo rằng tất cả tài liệu được lưu trữ an toàn."},
+                        {"The team worked very hard to meet the deadline.", "/ðə tiːm wɜːkt ˈveri hɑːd tuː miːt ðə ˈdedlaɪn/", "Nhóm đã làm việc rất chăm chỉ để kịp thời hạn."},
+                        {"We are proud to announce our new partnership today.", "/wiː ɑː(r) praʊd tuː əˈnaʊns ˈaʊə(r) njuː ˈpɑːtnəʃɪp təˈdeɪ/", "Chúng tôi tự hào thông báo về quan hệ đối tác mới của mình hôm nay."},
+                        {"Could you please provide us with more information?", "/kʊd juː pliːz prəˈvaɪd ʌs wɪð mɔː(r) ˌɪnfəˈmeɪʃn/", "Bạn có thể vui lòng cung cấp thêm thông tin cho chúng tôi không?"},
+                        {"The shipping costs are included in the total price.", "/ðə ˈʃɪpɪŋ kɒsts ɑː(r) ɪnˈkluːdɪd ɪn ðə ˈtəʊtl praɪs/", "Phí vận chuyển đã bao gồm trong tổng giá."},
+                        {"We need to hire more staff for the busy season.", "/wiː niːd tuː ˈhaɪə(r) mɔː(r) stɑːf fɔː(r) ðə ˈbɪzi ˈsiːzn/", "Chúng ta cần thuê thêm nhân viên cho mùa bận rộn."},
+                        {"The report shows a significant increase in sales lately.", "/ðə rɪˈpɔːt ʃəʊz ə sɪɡˈnɪfɪkənt ɪnˈkriːs ɪn seɪlz ˈleɪtli/", "Báo cáo cho thấy doanh số tăng trưởng đáng kể gần đây."},
+                        {"Please wait in the lobby until your name is called.", "/pliːz weɪt ɪn ðə ˈlɒbi ʌnˈtɪl jɔː(r) neɪm ɪz kɔːld/", "Vui lòng đợi ở sảnh cho đến khi tên bạn được gọi."},
+                        {"We offer a competitive benefits package for our employees.", "/wiː ˈɒfə(r) ə kəmˈpetətɪv ˈbenɪfɪts ˈpækɪdʒ fɔː(r) ˈaʊə(r) ɪmˈplɔɪiːz/", "Chúng tôi cung cấp một gói phúc lợi cạnh tranh cho nhân viên."},
+                        {"The training session will be held in the main hall.", "/ðə ˈtreɪnɪŋ ˈseʃn wɪl biː held ɪn ðə meɪn hɔːl/", "Buổi đào tạo sẽ được tổ chức tại hội trường chính."},
+                        {"Please keep your password confidential at all times.", "/pliːz kiːp jɔː(r) ˈpɑːswɜːd ˌkɒnfɪˈdenʃl æt ɔːl taɪmz/", "Vui lòng giữ bí mật mật khẩu của bạn mọi lúc."},
+                        {"We are committed to providing high-quality services.", "/wiː ɑː(r) kəˈmɪtɪd tuː prəˈvaɪdɪŋ haɪ ˈkwɒləti ˈsɜːvɪsɪz/", "Chúng tôi cam kết cung cấp dịch vụ chất lượng cao."},
+                        {"The software license needs to be renewed every year.", "/ðə ˈsɒftweə(r) ˈlaɪsns niːdz tuː biː rɪˈnjuːd ˈevri jɪə(r)/", "Bản quyền phần mềm cần được gia hạn hàng năm."},
+                        {"Please notify us of any changes to your contact details.", "/pliːz ˈnəʊtɪfaɪ ʌs əv ˈeni ˈtʃeɪndʒɪz tuː jɔː(r) ˈkɒntækt ˈdiːteɪlz/", "Vui lòng thông báo cho chúng tôi bất kỳ thay đổi nào về thông tin liên lạc của bạn."},
+                        {"We are currently reviewing your request for a refund.", "/wiː ɑː(r) ˈkʌrəntli rɪˈvjuːɪŋ jɔː(r) rɪˈkwest fɔː(r) ə ˈriːfʌnd/", "Chúng tôi hiện đang xem xét yêu cầu hoàn tiền của bạn."},
+                        {"The system will be down for maintenance this weekend.", "/ðə ˈsɪstəm wɪl biː daʊn fɔː(r) ˈmeɪntənənz ðɪs ˌwiːkˈend/", "Hệ thống sẽ tạm ngưng để bảo trì vào cuối tuần này."},
+                        {"Please refer to the manual for troubleshooting instructions.", "/pliːz rɪˈfɜː(r) tuː ðə ˈmænjuəl fɔː(r) ˈtrʌblʃuːtɪŋ ɪnˈstrʌkʃnz/", "Vui lòng tham khảo sách hướng dẫn để biết cách khắc phục sự cố."},
+                        {"We appreciate your patience during this transition period.", "/wiː əˈpriːʃieɪt jɔː(r) ˈpeɪʃns ˈdjʊərɪŋ ðɪs trænˈzɪʃn ˈpɪəriəd/", "Chúng tôi trân trọng sự kiên nhẫn của bạn trong giai đoạn chuyển đổi này."},
+                        {"The production line is running at full capacity now.", "/ðə prəˈdʌkʃn laɪn ɪz ˈrʌnɪŋ æt fʊl kəˈpæsəti naʊ/", "Dây chuyền sản xuất hiện đang chạy hết công suất."},
+                        {"Please confirm your attendance by Friday morning.", "/pliːz kənˈfɜːm jɔː(r) əˈtendəns baɪ ˈfraɪdeɪ ˈmɔːnɪŋ/", "Vui lòng xác nhận sự tham gia của bạn trước sáng thứ Sáu."},
+                        {"The company headquarters are located in New York City.", "/ðə ˈkʌmpəni ˌhedˈkwɔːtəz ɑː(r) ləʊˈkeɪtɪd ɪn njuː jɔːk ˈsɪti/", "Trụ sở chính của công ty nằm ở thành phố New York."},
+                        {"We need to conduct a thorough market analysis first.", "/wiː niːd tuː kənˈdʌkt ə ˈθʌrə ˈmɑːkɪt əˈnæləsɪs fɜːst/", "Chúng ta cần tiến hành một cuộc phân tích thị trường kỹ lưỡng trước."},
+                        {"Please be aware of the new security regulations.", "/pliːz biː əˈweə(r) əv ðə njuː sɪˈkjʊərəti ˌreɡjuˈleɪʃnz/", "Vui lòng lưu ý các quy định an ninh mới."},
+                        {"The department head will give a brief speech today.", "/ðə dɪˈpɑːtmənt hed wɪl ɡɪv ə briːf spiːtʃ təˈdeɪ/", "Trưởng phòng sẽ có một bài phát biểu ngắn hôm nay."},
+                        {"We are looking for ways to improve our efficiency.", "/wiː ɑː(r) ˈlʊkɪŋ fɔː(r) weɪz tuː ɪmˈpruːv ˈaʊə(r) ɪˈfɪʃnsi/", "Chúng tôi đang tìm cách để cải thiện hiệu quả làm việc."},
+                        {"Please make sure to back up your data regularly.", "/pliːz meɪk ʃʊə(r) tuː bæk ʌp jɔː(r) ˈdeɪtə ˈreɡjələli/", "Vui lòng đảm bảo sao lưu dữ liệu của bạn thường xuyên."},
+                        {"The contract includes a non-disclosure agreement clause.", "/ðə ˈkɒntrækt ɪnˈkluːdz ə nɒn dɪsˈkləʊʒə(r) əˈɡriːmənt klɔːz/", "Hợp đồng bao gồm một điều khoản thỏa thuận bảo mật thông tin."},
+                        {"We are aiming to achieve a higher customer satisfaction.", "/wiː ɑː(r) ˈeɪmɪŋ tuː əˈtʃiːv ə ˈhaɪə(r) ˈkʌstəmə(r) ˌsætɪsˈfækʃn/", "Chúng tôi đang đặt mục tiêu đạt được sự hài lòng của khách hàng cao hơn."},
+                        {"Please follow the instructions provided in the email.", "/pliːz ˈfɒləʊ ðə ɪnˈstrʌkʃnz prəˈvaɪdɪd ɪn ðə ˈiːmeɪl/", "Vui lòng thực hiện theo các hướng dẫn được cung cấp trong email."},
+                        {"The interview will last for approximately thirty minutes.", "/ðə ˈɪntəvjuː wɪl lɑːst fɔː(r) əˈprɒksɪmətli ˈθɜːti ˈmɪnɪts/", "Cuộc phỏng vấn sẽ kéo dài khoảng 30 phút."},
+                        {"We need to coordinate our efforts to be successful.", "/wiː niːd tuː kəʊˈɔːdɪneɪt ˈaʊə(r) ˈefəts tuː biː səkˈsesfl/", "Chúng ta cần phối hợp các nỗ lực để thành công."},
+                        {"Please submit your expenses report by the fifteenth.", "/pliːz səbˈmɪt jɔː(r) ɪkˈspensɪz rɪˈpɔːt baɪ ðə ˌfɪfˈtiːnθ/", "Vui lòng nộp báo cáo chi phí của bạn trước ngày 15."},
+                        {"The company offers free training for all newcomers.", "/ðə ˈkʌmpəni ˈɒfəz friː ˈtreɪnɪŋ fɔː(r) ɔːl ˈnjuːkʌməz/", "Công ty cung cấp chương trình đào tạo miễn phí cho tất cả người mới."},
+                        {"We are considering your proposal for a new project.", "/wiː ɑː(r) kənˈsɪdərɪŋ jɔː(r) prəˈpəʊzl fɔː(r) ə njuː ˈprɒdʒekt/", "Chúng tôi đang xem xét đề xuất của bạn cho một dự án mới."},
+                        {"Please double check the numbers before submitting it.", "/pliːz ˈdʌbl tʃek ðə ˈnʌmbəz bɪˈfɔː(r) səbˈmɪtɪŋ ɪt/", "Vui lòng kiểm tra lại các con số trước khi nộp."},
+                        {"The new policy will take effect starting next month.", "/ðə njuː ˈpɒləsi wɪl teɪk ɪˈfekt ˈstɑːtɪŋ nekst mʌnθ/", "Chính sách mới sẽ có hiệu lực bắt đầu từ tháng tới."},
+                        {"We are happy to assist you with any inquiries.", "/wiː ɑː(r) ˈhæpi tuː əˈsɪst juː wɪð ˈeni ɪnˈkwaɪəriz/", "Chúng tôi sẵn lòng hỗ trợ bạn với bất kỳ thắc mắc nào."},
+                        {"Please keep the noise level down in the library.", "/pliːz kiːp ðə nɔɪz ˈlevl daʊn ɪn ðə ˈlaɪbrəri/", "Vui lòng giữ mức độ ồn thấp trong thư viện."},
+                        {"The office is equipped with high speed internet access.", "/ðə ˈɒfɪs ɪz ɪˈkwɪpt wɪð haɪ spiːd ˈɪntənet ˈækses/", "Văn phòng được trang bị truy cập internet tốc độ cao."},
+                        {"We need to address the issues raised by the staff.", "/wiː niːd tuː əˈdres ðə ˈɪʃuːz reɪzd baɪ ðə stɑːf/", "Chúng ta cần giải quyết các vấn đề mà nhân viên đã nêu."},
+                        {"Please arrive at the airport two hours before departure.", "/pliːz əˈraɪv æt ðə ˈeəpɔːt tuː ˈaʊəz bɪˈfɔː(r) dɪˈpɑːtʃə(r)/", "Vui lòng đến sân bay hai tiếng trước khi khởi hành."},
+                        {"The store is open from nine AM to nine PM.", "/ðə stɔː(r) ɪz ˈəʊpən frəm naɪn eɪ em tuː naɪn piː em/", "Cửa hàng mở cửa từ 9 giờ sáng đến 9 giờ tối."},
+                        {"We are dedicated to protecting your personal information.", "/wiː ɑː(r) ˈdedɪkeɪtɪd tuː prəˈtektɪŋ jɔː(r) ˈpɜːsənl ˌɪnfəˈmeɪʃn/", "Chúng tôi tận tâm bảo vệ thông tin cá nhân của bạn."},
+                        {"Please use the stairs in case of an emergency.", "/pliːz juːz ðə steəz ɪn keɪs əv ən ɪˈmɜːdʒənsi/", "Vui lòng sử dụng cầu thang bộ trong trường hợp khẩn cấp."},
+                        {"The project requires a lot of time and resources.", "/ðə ˈprɒdʒekt rɪˈkwaɪəz ə lɒt əv taɪm ænd rɪˈsɔːsɪz/", "Dự án yêu cầu rất nhiều thời gian và nguồn lực."},
+                        {"We are grateful for your continued support and loyalty.", "/wiː ɑː(r) ˈɡreɪtfl fɔː(r) jɔː(r) kənˈtɪnjuːd səˈpɔːt ænd ˈlɔɪəlti/", "Chúng tôi biết ơn sự hỗ trợ và lòng trung thành tiếp tục của bạn."},
+                        {"Please let us know your availability for a meeting.", "/pliːz let ʌs nəʊ jɔː(r) əˌveɪləˈbɪləti fɔː(r) ə ˈmiːtɪŋ/", "Vui lòng cho chúng tôi biết thời gian rảnh của bạn cho một cuộc họp."},
+                        {"The new product line has been a great success.", "/ðə njuː ˈprɒdʌkt laɪn hæz biːn ə ɡreɪt səkˈses/", "Dòng sản phẩm mới đã gặt hái được thành công rực rỡ."},
+                        {"We need to implement a more effective backup system.", "/wiː niːd tuː ˈɪmplɪment ə mɔː(r) ɪˈfektɪv ˈbækʌp ˈsɪstəm/", "Chúng ta cần triển khai một hệ thống sao lưu hiệu quả hơn."},
+                        {"Please read the terms and conditions carefully.", "/pliːz riːd ðə tɜːmz ænd kənˈdɪʃnz ˈkeəfəli/", "Vui lòng đọc kỹ các điều khoản và điều kiện."},
+                        {"The company provides a laptop for each employee.", "/ðə ˈkʌmpəni prəˈvaɪdz ə ˈlæptɒp fɔː(r) iːtʃ ɪmˈplɔɪiː/", "Công ty cung cấp một chiếc máy tính xách tay cho mỗi nhân viên."},
+                        {"We are working on a solution to the problem.", "/wiː ɑː(r) ˈwɜːkɪŋ ɒn ə səˈluːʃn tuː ðə ˈprɒbləm/", "Chúng tôi đang xây dựng một giải pháp cho vấn đề này."},
+                        {"Please wear your identification badge at all times.", "/pliːz weə(r) jɔː(r) aɪˌdentɪfɪˈkeɪʃn bædʒ æt ɔːl taɪmz/", "Vui lòng đeo thẻ tên của bạn mọi lúc."},
+                        {"The seminar will cover a variety of interesting topics.", "/ðə ˈsemɪnɑː(r) wɪl ˈkʌvə(r) ə vəˈraɪəti əv ˈɪntrestɪŋ ˈtɒpɪks/", "Buổi hội thảo sẽ bao gồm nhiều chủ đề thú vị khác nhau."},
+                        {"We need to establish a clear communication channel.", "/wiː niːd tuː ɪˈstæblɪʃ ə klɪə(r) kəˌmjuːnɪˈkeɪʃn ˈtʃænl/", "Chúng ta cần thiết lập một kênh giao tiếp rõ ràng."},
+                        {"Please accept our apologies for the inconvenience caused.", "/pliːz əkˈsept ˈaʊə(r) əˈpɒlədʒiz fɔː(r) ðə ˌɪnkənˈviːniəns kɔːzd/", "Vui lòng chấp nhận lời xin lỗi của chúng tôi về sự bất tiện đã gây ra."},
+                        {"The office is within walking distance of the station.", "/ðə ˈɒfɪs ɪz wɪˈðɪn ˈwɔːkɪŋ ˈdɪstəns əv ðə ˈsteɪʃn/", "Văn phòng nằm trong khoảng cách có thể đi bộ từ nhà ga."},
+                        {"We are looking forward to a long term collaboration.", "/wiː ɑː(r) ˈlʊkɪŋ ˈfɔːwəd tuː ə lɒŋ tɜːm kəˌlæbəˈreɪʃn/", "Chúng tôi mong muốn có một sự hợp tác lâu dài."},
+                        {"Please sign up for the newsletter on our website.", "/pliːz saɪn ʌp fɔː(r) ðə ˈnjuːzletə(r) ɒn ˈaʊə(r) ˈwebsaɪt/", "Vui lòng đăng ký nhận bản tin trên trang web của chúng tôi."},
+                        {"The results of the survey will be published soon.", "/ðə rɪˈzʌlts əv ðə ˈsɜːveɪ wɪl biː ˈpʌblɪʃt suːn/", "Kết quả của cuộc khảo sát sẽ sớm được công bố."},
+                        {"We need to stay competitive in the global market.", "/wiː niːd tuː steɪ kəmˈpetətɪv ɪn ðə ˈɡləʊbl ˈmɑːkɪt/", "Chúng ta cần duy trì tính cạnh tranh trên thị trường toàn cầu."},
+                        {"Please contact us if you need any further assistance.", "/pliːz ˈkɒntækt ʌs ɪf juː niːd ˈeni ˈfɜːðə(r) əˈsɪstəns/", "Vui lòng liên hệ với chúng tôi nếu bạn cần hỗ trợ thêm."},
+                        {"The new manager has a lot of experience in this field.", "/ðə njuː ˈmænɪdʒə(r) hæz ə lɒt əv ɪkˈspɪəriəns ɪn ðɪs fiːld/", "Quản lý mới có rất nhiều kinh nghiệm trong lĩnh vực này."},
+                        {"We are focusing on developing new technologies.", "/wiː ɑː(r) ˈfəʊkəsɪŋ ɒn dɪˈveləpɪŋ njuː tekˈnɒlədʒiz/", "Chúng tôi đang tập trung vào phát triển các công nghệ mới."},
+                        {"Please return the borrowed items by tomorrow morning.", "/pliːz rɪˈtɜːn ðə ˈbɒrəʊd ˈaɪtəmz baɪ təˈmɒrəʊ ˈmɔːnɪŋ/", "Vui lòng trả lại các vật dụng đã mượn trước sáng mai."},
+                        {"The building is accessible for people with disabilities.", "/ðə ˈbɪldɪŋ ɪz əkˈsesəbl fɔː(r) ˈpiːpl wɪð ˌdɪsəˈbɪlətiz/", "Tòa nhà có lối đi thuận tiện cho người khuyết tật."},
+                        {"We are excited about the future of our company.", "/wiː ɑː(r) ɪkˈsaɪtɪd əˈbaʊt ðə ˈfjuːtʃə(r) əv ˈaʊə(r) ˈkʌmpəni/", "Chúng tôi rất hào hứng về tương lai của công ty mình."},
+                        {"Please feel free to contact me at any time.", "/pliːz fiːl friː tuː ˈkɒntækt miː æt ˈeni taɪm/", "Đừng ngần ngại liên hệ với tôi bất cứ lúc nào."}
+                };
+                for (String[] d : speakSents) {
+                    db.execSQL("INSERT OR IGNORE INTO questions (testId, type, questionText, optionA, optionB, optionC, optionD, correctOption, explanation, audioPath) " +
+                            "VALUES (600, 'SPEAKING_SENTENCE', '" + d[0].replace("'", "''") + "', '', '', '', '', '" + d[0].replace("'", "''") + "', '" + d[1] + " | " + d[2].replace("'", "''") + "', '')");
+                }
+
                 db.setTransactionSuccessful();
-                Log.d("AppDatabase", "Seeding successful with 4 tests and all questions.");
+                Log.d("AppDatabase", "Seeding successful with 6 tests and all questions.");
             } finally {
                 db.endTransaction();
             }

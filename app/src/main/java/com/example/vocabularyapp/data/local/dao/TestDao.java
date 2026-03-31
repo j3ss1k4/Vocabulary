@@ -18,6 +18,9 @@ public interface TestDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertTest(Test test);
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void insertAllTests(List<Test> tests);
+
     @Update
     void updateTest(Test test);
 

@@ -26,12 +26,15 @@ public class TestAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         items.clear();
         List<Test> grammarTests = new ArrayList<>();
         List<Test> listeningTests = new ArrayList<>();
+        List<Test> speakingTests = new ArrayList<>();
 
         for (Test t : tests) {
             if (t.id < 300) {
                 grammarTests.add(t);
-            } else {
+            } else if (t.id < 500) {
                 listeningTests.add(t);
+            } else {
+                speakingTests.add(t);
             }
         }
 
@@ -42,6 +45,10 @@ public class TestAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (!listeningTests.isEmpty()) {
             items.add("II. LISTENING");
             items.addAll(listeningTests);
+        }
+        if (!speakingTests.isEmpty()) {
+            items.add("III. SPEAKING");
+            items.addAll(speakingTests);
         }
         notifyDataSetChanged();
     }
@@ -76,12 +83,14 @@ public class TestAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Test test = (Test) items.get(position);
             TestViewHolder testHolder = (TestViewHolder) holder;
             
-            // Map original titles to new requested English layout titles
             String displayTitle = test.title;
+            // Clean up titles for display
             if (test.id == 100) displayTitle = "Multiple Choice Quiz";
             else if (test.id == 200) displayTitle = "Fill-in-the-Blanks";
             else if (test.id == 300) displayTitle = "Multiple Choice Quiz";
             else if (test.id == 400) displayTitle = "Dictation Practice";
+            else if (test.id == 500) displayTitle = "Vocabulary Practice";
+            else if (test.id == 600) displayTitle = "Sentence Practice";
             
             testHolder.binding.tvTitle.setText(displayTitle);
             testHolder.binding.tvDesc.setText(test.description);

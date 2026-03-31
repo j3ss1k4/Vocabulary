@@ -17,6 +17,9 @@ public interface QuestionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Question question);
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void insertAll(List<Question> questions);
+
     @Update
     void update(Question question);
 
