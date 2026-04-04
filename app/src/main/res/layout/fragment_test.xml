@@ -3,21 +3,39 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="16dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Bài Thi Định Kỳ"
+        android:text="Kiểm Tra Theo Chủ Đề"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:padding="8dp"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chọn một chủ đề bạn đã tạo để bắt đầu kiểm tra:"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTests"
+        android:id="@+id/rvCategories"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingBottom="16dp" />
+
+    <TextView
+        android:id="@+id/tvEmptyHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bạn chưa có từ vựng nào. Hãy thêm từ vựng ở mục Từ Vựng trước!"
+        android:gravity="center"
+        android:layout_marginTop="32dp"
+        android:visibility="gone"/>
+
 </LinearLayout>

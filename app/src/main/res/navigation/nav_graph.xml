@@ -35,4 +35,10 @@
         android:label="Hồ Sơ"
         tools:layout="@layout/fragment_profile" />
 
+    <fragment
+        android:id="@+id/matchingGameFragment"
+        android:name="com.example.vocabularyapp.ui.matching.MatchingGameFragment"
+        android:label="Trò Chơi Ghép Thẻ"
+        tools:layout="@layout/fragment_matching_game" />
+
 </navigation>

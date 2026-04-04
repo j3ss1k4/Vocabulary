@@ -10,8 +10,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.vocabularyapp.R;
 import com.example.vocabularyapp.base.BaseFragment;
 import com.example.vocabularyapp.databinding.FragmentHomeBinding;
 import com.github.mikephil.charting.data.PieData;
@@ -43,6 +45,10 @@ public class HomeFragment extends BaseFragment<FragmentHomeBinding> {
     @Override
     protected void initView() {
         setupPieChart();
+        
+        binding.cardMatchingGame.setOnClickListener(v -> {
+            Navigation.findNavController(v).navigate(R.id.matchingGameFragment);
+        });
     }
 
     private void setupPieChart() {
@@ -61,7 +67,6 @@ public class HomeFragment extends BaseFragment<FragmentHomeBinding> {
         binding.rvLessons.setAdapter(adapter);
         adapter.setOnLessonClickListener(lesson -> {
             Toast.makeText(getContext(), "Bắt đầu học: " + lesson.title, Toast.LENGTH_SHORT).show();
-            // Điều hướng tới ExerciseFragment hoặc VocabularyFragment ở đây
         });
     }
 

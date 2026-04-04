@@ -2,9 +2,10 @@ package com.example.vocabularyapp.data.local.entity;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import java.io.Serializable;
 
 @Entity(tableName = "words")
-public class Word {
+public class Word implements Serializable {
     @PrimaryKey(autoGenerate = true)
     public int id;
     public String term;

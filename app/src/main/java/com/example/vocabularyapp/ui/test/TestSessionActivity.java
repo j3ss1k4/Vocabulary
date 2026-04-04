@@ -3,11 +3,9 @@ package com.example.vocabularyapp.ui.test;
 import android.content.Intent;
 import android.os.CountDownTimer;
 import android.view.View;
-import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.example.vocabularyapp.base.BaseActivity;
-import com.example.vocabularyapp.data.local.AppDatabase;
 import com.example.vocabularyapp.data.local.entity.Question;
 import com.example.vocabularyapp.data.local.entity.Test;
 import com.example.vocabularyapp.data.local.entity.Word;
@@ -46,16 +44,16 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
 
     @Override
     protected void initData() {
-        // Thay vì lấy câu hỏi từ bảng 'questions', ta lấy từ vựng người dùng nhập từ bảng 'words'
-        AppDatabase.getInstance(this).wordDao().getAllWords().observe(this, words -> {
-            if (words != null && words.size() >= 4) {
-                generateQuestionsFromWords(words);
-                startTest();
-            } else {
-                Toast.makeText(this, "Bạn cần ít nhất 4 từ vựng để tạo bài kiểm tra", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        });
+        // Nhận dữ liệu từ Intent thay vì Database
+        ArrayList<Word> userWords = (ArrayList<Word>) getIntent().getSerializableExtra("user_words");
+
+        if (userWords != null && userWords.size() >= 4) {
+            generateQuestionsFromWords(userWords);
+            startTest();
+        } else {
+            Toast.makeText(this, "Không có đủ dữ liệu để tạo bài kiểm tra", Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
     private void generateQuestionsFromWords(List<Word> words) {
@@ -63,11 +61,9 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
         List<Word> shuffledWords = new ArrayList<>(words);
         Collections.shuffle(shuffledWords);
 
-        // Giới hạn số câu hỏi theo cấu hình của bài Test (mặc định lấy 10-20 câu tùy bài)
+        // Giới hạn số câu hỏi
         int numQuestions = Math.min(shuffledWords.size(), currentTest.totalQuestions);
-        if (numQuestions > 20) numQuestions = 20; // Giới hạn thực tế để bài test không quá dài
-
-        Random random = new Random();
+        if (numQuestions > 20) numQuestions = 20;
 
         for (int i = 0; i < numQuestions; i++) {
             Word correctWord = shuffledWords.get(i);
@@ -79,7 +75,7 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
             List<String> options = new ArrayList<>();
             options.add(correctWord.definition); // Đáp án đúng
             
-            // Lấy 3 định nghĩa sai ngẫu nhiên
+            // Lấy 3 định nghĩa sai ngẫu nhiên từ chính danh sách người dùng nhập
             List<Word> otherWords = new ArrayList<>(words);
             otherWords.remove(correctWord);
             Collections.shuffle(otherWords);
@@ -87,18 +83,24 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
                 options.add(otherWords.get(j).definition);
             }
 
+            // Đảm bảo đủ 4 phương án nếu có thể
+            while (options.size() < 4 && options.size() < words.size()) {
+                // Trường hợp này hiếm khi xảy ra nếu words.size() >= 4
+                break; 
+            }
+
             Collections.shuffle(options);
             
-            q.optionA = options.get(0);
-            q.optionB = options.get(1);
-            q.optionC = options.get(2);
-            q.optionD = options.get(3);
+            if (options.size() >= 1) q.optionA = options.get(0);
+            if (options.size() >= 2) q.optionB = options.get(1);
+            if (options.size() >= 3) q.optionC = options.get(2);
+            if (options.size() >= 4) q.optionD = options.get(3);
             
-            // Xác định correctOption (A, B, C, D)
-            if (q.optionA.equals(correctWord.definition)) q.correctOption = "A";
-            else if (q.optionB.equals(correctWord.definition)) q.correctOption = "B";
-            else if (q.optionC.equals(correctWord.definition)) q.correctOption = "C";
-            else if (q.optionD.equals(correctWord.definition)) q.correctOption = "D";
+            // Xác định correctOption
+            if (q.optionA != null && q.optionA.equals(correctWord.definition)) q.correctOption = "A";
+            else if (q.optionB != null && q.optionB.equals(correctWord.definition)) q.correctOption = "B";
+            else if (q.optionC != null && q.optionC.equals(correctWord.definition)) q.correctOption = "C";
+            else if (q.optionD != null && q.optionD.equals(correctWord.definition)) q.correctOption = "D";
 
             q.explanation = "Từ \"" + correctWord.term + "\" có nghĩa là: " + correctWord.definition;
             questions.add(q);
@@ -143,9 +145,17 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
 
         binding.rgOptions.setVisibility(View.VISIBLE);
         binding.tilAnswer.setVisibility(View.GONE);
+        
+        binding.rbOptionA.setVisibility(q.optionA != null ? View.VISIBLE : View.GONE);
         binding.rbOptionA.setText(q.optionA);
+        
+        binding.rbOptionB.setVisibility(q.optionB != null ? View.VISIBLE : View.GONE);
         binding.rbOptionB.setText(q.optionB);
+        
+        binding.rbOptionC.setVisibility(q.optionC != null ? View.VISIBLE : View.GONE);
         binding.rbOptionC.setText(q.optionC);
+        
+        binding.rbOptionD.setVisibility(q.optionD != null ? View.VISIBLE : View.GONE);
         binding.rbOptionD.setText(q.optionD);
 
         binding.pbProgress.setProgress((currentQuestionIndex + 1) * 100 / questions.size());
