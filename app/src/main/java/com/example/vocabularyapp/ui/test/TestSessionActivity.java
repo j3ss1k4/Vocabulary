@@ -10,12 +10,14 @@ import com.example.vocabularyapp.base.BaseActivity;
 import com.example.vocabularyapp.data.local.AppDatabase;
 import com.example.vocabularyapp.data.local.entity.Question;
 import com.example.vocabularyapp.data.local.entity.Test;
+import com.example.vocabularyapp.data.local.entity.Word;
 import com.example.vocabularyapp.databinding.ActivityTestSessionBinding;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding> {
 
@@ -44,20 +46,63 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
 
     @Override
     protected void initData() {
-        AppDatabase.getInstance(this).questionDao().getQuestionsByTestId(currentTest.id).observe(this, questionList -> {
-            if (questionList != null && !questionList.isEmpty()) {
-                questions = new ArrayList<>(questionList);
-                // Logic tổng hợp câu hỏi ngẫu nhiên từ kho
-                Collections.shuffle(questions);
-                if (questions.size() > currentTest.totalQuestions) {
-                    questions = questions.subList(0, currentTest.totalQuestions);
-                }
+        // Thay vì lấy câu hỏi từ bảng 'questions', ta lấy từ vựng người dùng nhập từ bảng 'words'
+        AppDatabase.getInstance(this).wordDao().getAllWords().observe(this, words -> {
+            if (words != null && words.size() >= 4) {
+                generateQuestionsFromWords(words);
                 startTest();
             } else {
-                Toast.makeText(this, "Không có câu hỏi cho bài thi này", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Bạn cần ít nhất 4 từ vựng để tạo bài kiểm tra", Toast.LENGTH_SHORT).show();
                 finish();
             }
         });
+    }
+
+    private void generateQuestionsFromWords(List<Word> words) {
+        questions = new ArrayList<>();
+        List<Word> shuffledWords = new ArrayList<>(words);
+        Collections.shuffle(shuffledWords);
+
+        // Giới hạn số câu hỏi theo cấu hình của bài Test (mặc định lấy 10-20 câu tùy bài)
+        int numQuestions = Math.min(shuffledWords.size(), currentTest.totalQuestions);
+        if (numQuestions > 20) numQuestions = 20; // Giới hạn thực tế để bài test không quá dài
+
+        Random random = new Random();
+
+        for (int i = 0; i < numQuestions; i++) {
+            Word correctWord = shuffledWords.get(i);
+            Question q = new Question();
+            q.type = "MULTIPLE_CHOICE";
+            q.questionText = "Nghĩa của từ \"" + correctWord.term + "\" là gì?";
+            
+            // Tạo 4 lựa chọn
+            List<String> options = new ArrayList<>();
+            options.add(correctWord.definition); // Đáp án đúng
+            
+            // Lấy 3 định nghĩa sai ngẫu nhiên
+            List<Word> otherWords = new ArrayList<>(words);
+            otherWords.remove(correctWord);
+            Collections.shuffle(otherWords);
+            for (int j = 0; j < 3 && j < otherWords.size(); j++) {
+                options.add(otherWords.get(j).definition);
+            }
+
+            Collections.shuffle(options);
+            
+            q.optionA = options.get(0);
+            q.optionB = options.get(1);
+            q.optionC = options.get(2);
+            q.optionD = options.get(3);
+            
+            // Xác định correctOption (A, B, C, D)
+            if (q.optionA.equals(correctWord.definition)) q.correctOption = "A";
+            else if (q.optionB.equals(correctWord.definition)) q.correctOption = "B";
+            else if (q.optionC.equals(correctWord.definition)) q.correctOption = "C";
+            else if (q.optionD.equals(correctWord.definition)) q.correctOption = "D";
+
+            q.explanation = "Từ \"" + correctWord.term + "\" có nghĩa là: " + correctWord.definition;
+            questions.add(q);
+        }
     }
 
     private void startTest() {
@@ -96,17 +141,12 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
         binding.tvQuestionCount.setText("Câu " + (currentQuestionIndex + 1) + "/" + questions.size());
         binding.tvQuestionText.setText(q.questionText);
 
-        if (q.type.equals("MULTIPLE_CHOICE") || q.type.equals("LISTENING_MC")) {
-            binding.rgOptions.setVisibility(View.VISIBLE);
-            binding.tilAnswer.setVisibility(View.GONE);
-            binding.rbOptionA.setText(q.optionA);
-            binding.rbOptionB.setText(q.optionB);
-            binding.rbOptionC.setText(q.optionC);
-            binding.rbOptionD.setText(q.optionD);
-        } else {
-            binding.rgOptions.setVisibility(View.GONE);
-            binding.tilAnswer.setVisibility(View.VISIBLE);
-        }
+        binding.rgOptions.setVisibility(View.VISIBLE);
+        binding.tilAnswer.setVisibility(View.GONE);
+        binding.rbOptionA.setText(q.optionA);
+        binding.rbOptionB.setText(q.optionB);
+        binding.rbOptionC.setText(q.optionC);
+        binding.rbOptionD.setText(q.optionD);
 
         binding.pbProgress.setProgress((currentQuestionIndex + 1) * 100 / questions.size());
     }
@@ -115,23 +155,15 @@ public class TestSessionActivity extends BaseActivity<ActivityTestSessionBinding
         Question q = questions.get(currentQuestionIndex);
         boolean isCorrect = false;
 
-        if (q.type.equals("MULTIPLE_CHOICE") || q.type.equals("LISTENING_MC")) {
-            int selectedId = binding.rgOptions.getCheckedRadioButtonId();
-            if (selectedId != -1) {
-                RadioButton selectedRb = findViewById(selectedId);
-                String selectedText = "";
-                if (selectedId == binding.rbOptionA.getId()) selectedText = "A";
-                else if (selectedId == binding.rbOptionB.getId()) selectedText = "B";
-                else if (selectedId == binding.rbOptionC.getId()) selectedText = "C";
-                else if (selectedId == binding.rbOptionD.getId()) selectedText = "D";
-                
-                if (selectedText.equals(q.correctOption)) {
-                    isCorrect = true;
-                }
-            }
-        } else {
-            String answer = binding.etAnswer.getText().toString().trim();
-            if (answer.equalsIgnoreCase(q.correctOption)) {
+        int selectedId = binding.rgOptions.getCheckedRadioButtonId();
+        if (selectedId != -1) {
+            String selectedText = "";
+            if (selectedId == binding.rbOptionA.getId()) selectedText = "A";
+            else if (selectedId == binding.rbOptionB.getId()) selectedText = "B";
+            else if (selectedId == binding.rbOptionC.getId()) selectedText = "C";
+            else if (selectedId == binding.rbOptionD.getId()) selectedText = "D";
+            
+            if (selectedText.equals(q.correctOption)) {
                 isCorrect = true;
             }
         }
