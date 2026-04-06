@@ -24,6 +24,12 @@
         tools:layout="@layout/fragment_exercise" />
 
     <fragment
+        android:id="@+id/forumFragment"
+        android:name="com.example.vocabularyapp.ui.forum.ForumFragment"
+        android:label="Thảo Luận"
+        tools:layout="@layout/fragment_forum" />
+
+    <fragment
         android:id="@+id/testFragment"
         android:name="com.example.vocabularyapp.ui.test.TestFragment"
         android:label="Kiểm Tra"

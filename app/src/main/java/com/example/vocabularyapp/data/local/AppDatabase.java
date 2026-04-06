@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.Executors; // Thêm dòng này để sửa lỗi Executors
 
 // Khai báo Entity đúng class trong package của bạn
-@Database(entities = {User.class, Word.class, Lesson.class, Progress.class, Post.class, Test.class, Question.class, Score.class}, version = 80)
+@Database(entities = {User.class, Word.class, Lesson.class, Progress.class, Post.class, Comment.class, Test.class, Question.class, Score.class}, version = 81)
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
 
@@ -30,7 +30,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract QuestionDao questionDao();
     public abstract ScoreDao scoreDao();
     public abstract PostDao postDao();
-
+    public abstract CommentDao commentDao();
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -68,6 +68,12 @@ public abstract class AppDatabase extends RoomDatabase {
                 db.execSQL("INSERT OR IGNORE INTO users (username, email, password, streak, rank) " +
                         "VALUES ('user', 'user@example.com', '123', 0, 'Người mới bắt đầu')");
 
+                // Seed data
+                long now = System.currentTimeMillis();
+                db.execSQL("INSERT OR IGNORE INTO posts (id, userId, username, content, timestamp, likeCount) " +
+                        "VALUES (1, '1', 'admin', 'Chào mừng mọi người đến với cộng đồng học tiếng Anh!', " + now + ", 10)");
+                db.execSQL("INSERT OR IGNORE INTO posts (id, userId, username, content, timestamp, likeCount) " +
+                        "VALUES (2, '1', 'user', 'Có ai có mẹo học 50 từ vựng mỗi ngày không ạ?', " + (now - 3600000) + ", 5)");
                 // Chèn thông tin bài Test
                 db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (100, 'Multiple Choice Quiz', 'Grammar and Vocabulary', 20, 100)");
                 db.execSQL("INSERT OR IGNORE INTO tests (id, title, description, durationMinutes, totalQuestions) VALUES (200, 'Fill-in-the-Blanks', 'Verb forms and structures', 20, 100)");
