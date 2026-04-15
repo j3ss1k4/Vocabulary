@@ -1,6 +1,10 @@
 package com.example.vocabularyapp.ui.forum;
 
-import android.app.AlertDialog;import android.view.LayoutInflater;
+import android.app.AlertDialog;
+import android.graphics.Typeface;
+import android.text.format.DateUtils;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -44,6 +48,7 @@ public class ForumFragment extends BaseFragment<FragmentForumBinding> implements
         viewModel.getAllPosts().observe(getViewLifecycleOwner(), posts -> {
             if (posts != null) {
                 adapter.setPosts(posts);
+                binding.rvPosts.setVisibility(posts.isEmpty() ? View.GONE : View.VISIBLE);
             }
         });
     }
@@ -54,15 +59,16 @@ public class ForumFragment extends BaseFragment<FragmentForumBinding> implements
 
         final EditText input = new EditText(requireContext());
         input.setHint("Bạn đang nghĩ gì?");
-        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        int padding = (int) (20 * getResources().getDisplayMetrics().density);
         input.setPadding(padding, padding, padding, padding);
         builder.setView(input);
 
         builder.setPositiveButton("Đăng", (dialog, which) -> {
             String content = input.getText().toString().trim();
             if (!content.isEmpty()) {
-                // Sử dụng thông tin mặc định, có thể thay thế bằng thông tin người dùng thật
-                viewModel.addPost("1", "User Name", content);
+                // Lấy thông tin người dùng từ Session/Auth nếu có, ở đây dùng tạm "User"
+                viewModel.addPost("user_id_123", "Người dùng", content);
+                Toast.makeText(requireContext(), "Đã đăng bài viết", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(requireContext(), "Nội dung không được để trống", Toast.LENGTH_SHORT).show();
             }
@@ -83,51 +89,53 @@ public class ForumFragment extends BaseFragment<FragmentForumBinding> implements
 
     private void showCommentsDialog(Post post) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-
-        LinearLayout root = new LinearLayout(requireContext());
-        root.setOrientation(LinearLayout.VERTICAL);
-        int padding = (int) (16 * getResources().getDisplayMetrics().density);
-        root.setPadding(padding, padding, padding, padding);
+        
+        // Tạo View cho Dialog bình luận
+        View dialogView = LayoutInflater.from(requireContext()).inflate(android.R.layout.list_content, null);
+        LinearLayout layout = new LinearLayout(requireContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int p = (int) (16 * getResources().getDisplayMetrics().density);
+        layout.setPadding(p, p, p, p);
 
         TextView title = new TextView(requireContext());
-        title.setText("Bình luận cho bài viết của " + post.username);
+        title.setText("Bình luận (" + post.username + ")");
+        title.setTypeface(null, Typeface.BOLD);
         title.setTextSize(18);
-        title.setPadding(0, 0, 0, padding);
-        root.addView(title);
+        layout.addView(title);
 
         RecyclerView rvComments = new RecyclerView(requireContext());
         rvComments.setLayoutManager(new LinearLayoutManager(requireContext()));
-        LinearLayout.LayoutParams rvParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.0f);
+        LinearLayout.LayoutParams rvParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 400); // Chiều cao cố định
         rvComments.setLayoutParams(rvParams);
-        root.addView(rvComments);
+        layout.addView(rvComments);
 
-        EditText etComment = new EditText(requireContext());
+        final EditText etComment = new EditText(requireContext());
         etComment.setHint("Viết bình luận...");
-        root.addView(etComment);
+        layout.addView(etComment);
 
-        builder.setView(root);
+        builder.setView(layout);
         builder.setPositiveButton("Gửi", (dialog, which) -> {
             String commentText = etComment.getText().toString().trim();
             if (!commentText.isEmpty()) {
-                viewModel.addComment(post.id, "1", "User Name", commentText);
+                viewModel.addComment(post.id, "user_id_123", "Người dùng", commentText);
             }
         });
         builder.setNegativeButton("Đóng", null);
 
-        AlertDialog dialog = builder.create();
         CommentsAdapter commentsAdapter = new CommentsAdapter(new ArrayList<>());
         rvComments.setAdapter(commentsAdapter);
 
         viewModel.getCommentsForPost(post.id).observe(getViewLifecycleOwner(), comments -> {
             if (comments != null) {
                 commentsAdapter.setComments(comments);
+                rvComments.scrollToPosition(comments.size() - 1);
             }
         });
 
-        dialog.show();
+        builder.show();
     }
 
+    // Adapter nội bộ cho bình luận
     private static class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.CommentViewHolder> {
         private List<Comment> comments;
 
@@ -152,7 +160,12 @@ public class ForumFragment extends BaseFragment<FragmentForumBinding> implements
             Comment comment = comments.get(position);
             holder.binding.tvUsername.setText(comment.username);
             holder.binding.tvContent.setText(comment.content);
-            holder.binding.tvTimestamp.setText("Vừa xong");
+            
+            CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
+                    comment.timestamp, 
+                    System.currentTimeMillis(), 
+                    DateUtils.MINUTE_IN_MILLIS);
+            holder.binding.tvTimestamp.setText(timeAgo);
         }
 
         @Override

@@ -2,8 +2,10 @@ package com.example.vocabularyapp.data.local.entity;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import com.google.firebase.firestore.IgnoreExtraProperties;
 
 @Entity(tableName = "posts")
+@IgnoreExtraProperties
 public class Post {
     @PrimaryKey(autoGenerate = true)
     public int id;

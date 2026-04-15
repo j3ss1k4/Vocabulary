@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
-    // alias(libs.plugins.google.services) // Commented out because google-services.json is missing
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -8,7 +8,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.vocabularyapp"
+        // Cập nhật applicationId để khớp với tệp google-services.json của bạn
+        applicationId = "com.forum"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -56,13 +57,11 @@ dependencies {
     // MPAndroidChart
     implementation(libs.mp.android.chart)
 
-    // Firebase - Commented out until google-services.json is added
-    /*
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
-    */
 
     // WorkManager
     implementation(libs.work.runtime)

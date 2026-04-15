@@ -1,5 +1,6 @@
 package com.example.vocabularyapp.ui.forum;
 
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
@@ -57,8 +58,15 @@ public class ForumAdapter extends RecyclerView.Adapter<ForumAdapter.PostViewHold
         void bind(Post post) {
             binding.tvUsername.setText(post.username);
             binding.tvContent.setText(post.content);
-            binding.tvTimestamp.setText(String.valueOf(post.timestamp)); // Simplified, should format date
-            binding.btnLike.setText("Like (" + post.likeCount + ")");
+            
+            // Định dạng thời gian: Ví dụ "2 phút trước"
+            CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
+                    post.timestamp, 
+                    System.currentTimeMillis(), 
+                    DateUtils.MINUTE_IN_MILLIS);
+            binding.tvTimestamp.setText(timeAgo);
+            
+            binding.btnLike.setText("Thích (" + post.likeCount + ")");
 
             binding.btnLike.setOnClickListener(v -> {
                 if (listener != null) {

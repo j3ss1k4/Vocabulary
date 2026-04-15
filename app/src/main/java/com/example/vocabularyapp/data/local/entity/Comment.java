@@ -1,14 +1,11 @@
 package com.example.vocabularyapp.data.local.entity;
 
 import androidx.room.Entity;
-import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
+import com.google.firebase.firestore.IgnoreExtraProperties;
 
-@Entity(tableName = "comments",
-        foreignKeys = @ForeignKey(entity = Post.class,
-                parentColumns = "id",
-                childColumns = "postId",
-                onDelete = ForeignKey.CASCADE))
+@Entity(tableName = "comments")
+@IgnoreExtraProperties
 public class Comment {
     @PrimaryKey(autoGenerate = true)
     public int id;
@@ -17,4 +14,6 @@ public class Comment {
     public String username;
     public String content;
     public long timestamp;
+
+    public Comment() {}
 }
